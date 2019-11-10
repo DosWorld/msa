@@ -1,276 +1,323 @@
-{\rtf1\ansi\ansicpg1252\deff0\deflang1053{\fonttbl{\f0\fnil\fcharset0 Courier New;}}
-\viewkind4\uc1\pard\qc\f0\fs20\par
-\par
-\b MSA 1.0  (BUILD 11)\par
-\b0\par
-Copyright(C)\par
-2001\par
-Robert \'d6stling\par
-\par
-\ul robost86@hotmail.com\par
-\pard\ulnone\par
-\par
-                \ul Copyright\ulnone\par
-\par
-        You are free to do whatever you want to do with MSA 1.0\par
-        (Build 11), except selling it. Feel free to modify the source\par
-        code, but please don't just delete my copyright.\par
-\par
-\par
-                \ul Bugs?\ulnone\par
-\par
-        When this package is released, there are no known bugs. If\par
-        you discover a bug, or just want to come with a suggestion or\par
-        a comment, just e-mail me (robost86@hotmail.com).\par
-\par
-\par
-                \ul What's MSA?\ulnone\par
-\par
-        MSA is a new freeware x86 assembler. It supports all 8086\par
-        instructions and most of the 80186/80286 instructions. It\par
-        only supports flat binary output (.COM files). Written by\par
-        a 14-year old Swedish programmer (that's why my english\par
-        isn't very good)-:\par
-\par
-        MSA is pretty fast, much faster than NASM, and the only file\par
-        you'll need to build a program is MSA.COM (27 KB). It runs\par
-        fine on my old 286.\par
-\par
-        I wrote MSA in C, using Borland C++ 2.0, but I don't think\par
-        it should be very hard to port to another compiler. The\par
-        source code is not commented, not structured, so, it may\par
-        be a little hard to read...\par
-\par
-        I have not tested MSA in FreeDOS yet, but there should not\par
-        be any difference between running MSA in a DOS box, real-mode\par
-        MS-DOS or FreeDOS.\par
-\par
-\par
-                \ul System Requirements\ulnone\par
-                \par
-        MSA had been tested on the following computer, and it runs just fine.\par
-\par
-                \ul Toshiba 3100\par
-\ulnone\par
-                CPU:    80286\par
-                RAM:    640 KB\par
-                HD:     10 MB\par
-                OS:     Toshiba DOS 5.0\par
-                Screen: Small B/W plasma screen\par
-\par
-        Your HD will not be filled just by installing MSA...\par
-\par
-                168 KB (full installation)\par
-                27 KB (minimum installation)\par
-\par
-        MSA comes with both a 8086 and a 80186+ executable.\par
-\par
-                \ul Using MSA\ulnone\par
-\par
-        MSA is a command-line program, use your favourite editor to\par
-        edit the source files. Here are a more detailed description\par
-        of the different command-line options MSA supports. (These\par
-        command-line options are case insensitive, like the rest of\par
-        MSA.\par
-\par
-\par
-        =============================================================\par
-\par
-                -o              - Set output file\par
-\par
-        Use: -ofile.com, -odisk.bin\par
-\par
-        There can only be one output file per compile, if more than\par
-        one output files are present, the last one will be used. If\par
-        no output file is present, you'll see the built-in help screen.\par
-\par
-        =============================================================\par
-\par
-                -p              - Nr of times to pass the file(s)\par
-\par
-        Use: -p3, -p1000\par
-\par
-        This is an optional command. -p2 is used if you don't type\par
-        anything else.\par
-\par
-        =============================================================\par
-\par
-                -s              - Set starting point\par
-\par
-        Use: -s0, -s0x7c00\par
-\par
-        This is an optional command, if you don't use this option,\par
-        the standard DOS .COM starting point (0x100) is used.\par
-\par
-        =============================================================\par
-\par
-                -b              - Set buffer size\par
-\par
-        Use: -b0x400, -b0x100\par
-\par
-        This option changes the size of the output buffer kept in\par
-        memory. Should be a value between 0x100 (256) and 0x4000\par
-        (16 KB).\par
-\par
-        =============================================================\par
-\par
-                -m              - Set output level\par
-\par
-        Use: -m0, -m1, -m2\par
-\par
-        m0 means: "only report errors"\par
-        m1 means: "only report errors and serious warnings"\par
-        m2 means: "report all"\par
-\par
-\par
-        All other commands, not beginning with '-' will be assumed\par
-        to be input files.\par
-\par
-\par
-\par
-                \ul The syntax of MSA\ulnone\par
-\par
-        MSA:s syntax is similar to the syntax of NASM. I think every\par
-        documented feature of MSA is supported by NASM, but this does\par
-        _not_ mean that a NASM program always can be assebled by MSA.\par
-        For example, MSA has no 32-bit support.\par
-\par
-        \ul Constants\ulnone\par
-\par
-        There are two ways of declaring constants in MSA.\par
-\par
-        1.      ident   EQU     value\par
-        2.      CONST   ident   value\par
-\par
-        I recommend the first way, for compatibility with NASM.\par
-        A constant value may use following operators:\par
-                '+', '-', '*', '/' and '%'\par
-        But NOT:\par
-                '(' and ')'\par
-\par
-        You may also use following constants:\par
-                $ and $$\par
-        (A non NASM-compatible synonyme for '$' is 'offset')\par
-\par
-        $ is the offset (offset of output file + staring point)\par
-        $$ is the starting point\par
-\par
-        You may only define integer constants, NOT floating point\par
-        or string constants.\par
-\par
-        Examples of valid constants:\par
-\par
-        data_start      EQU     $+0x100\par
-        my_sweet        EQU     0x4*0x13\par
-        lord            EQU     $$-0x80\par
-\par
-        \ul Labels, DB, DW and DD\ulnone\par
-\par
-\par
-        In MSA, you define labels in the same way as you do in all\par
-        programming languages,\par
-\par
-label:\par
-\par
-        where 'label' is the name of your label. There is another way to\par
-        define a label, only used with DB, DW and DD. This command:\par
-\par
-fname   DB      "filename.dat",0\par
-idword  DW      0x51a0\par
-\par
-        does the same thing as:\par
-\par
-fname:  DB      "filename.dat",0\par
-idword: DB      0x51a0\par
-\par
-\par
-        DB can be used to declare strings and 8-bit values:\par
-\par
-my_db   DB      "this is a string",1,2,3,0x10,0x20,0x30,14%3\par
-\par
-\par
-        DW is used only to declare 16-bit variables:\par
-\par
-my_dw   DW      0x2314,0x5214,0x5382,0x0000,4,1,6\par
-\par
-\par
-        DD is used only to declare 32-bit variables:\par
-\par
-my_dd   DD      0x23a36b14,0x552814,0x5ba4382,0x1000000,4,51,6\par
-\par
-\par
-        \ul Comments\ulnone\par
-\par
-        Ordninary assembler comments, one-line comments beginning with\par
-        ';', are the only valid comments in MSA.\par
-\par
-\par
-        \ul Include\ulnone\par
-\par
-        Does the same thing as typing an extra input file in the command\par
-        line (adds the file to the 'to do' list).\par
-\par
-        Example:\par
-\par
-        ; f1.asm\par
-\par
-        mov     ax,1\par
-        include "f2.asm"\par
-        mov     ax,3\par
-\par
-        =============================================================\par
-\par
-        ; f2.asm\par
-\par
-        mov     ax,2\par
-\par
-\par
-        This code will generate following in NASM:\par
-\par
-        mov     ax,1    ; from f1.asm\par
-        mov     ax,2    ; from f2.asm\par
-        mov     ax,3    ; from f1.asm\par
-\par
-        , but MSA will assembler this:\par
-\par
-        mov     ax,1    ; from f1.asm\par
-        mov     ax,3    ; from f1.asm\par
-        mov     ax,2    ; from f2.asm\par
-\par
-        When MSA finds an 'include' directive, the file is placed as the\par
-        last item if the 'to do' list, while NASM starts assembling the\par
-        new file, and when that's done, it returns to the main file.\par
-        If a file that is allready included in the 'to do' list in included\par
-        again, nothing happends (to avoid cross-referencing).\par
-\par
-\par
-        \ul Space\ulnone\par
-\par
-        NASM will assemble this\par
-\par
-        mov     ax, 3\par
-        cmp     al, 2\par
-\par
-        , but MSA says 'Syntax error'. Spaces aren't allowed everywhere\par
-        in MSA. Not within identifiers, or between operands (like in the\par
-        example above). Use this instead:\par
-\par
-        mov     ax,3\par
-        cmp     al,2\par
-\par
-\par
-        \ul Opcodes\ulnone\par
-\par
-        If you want to use the short opcodes for the 1-step\par
-        bit shift/rotation instructions, you'll have to type:\par
-\par
-        shl1    ax\par
-        ror1    bl\par
-        ...\par
-\par
-\par
-              \b   22:47 12 Jan 2001\par
-\b0                  End of document\par
-\par
-}
- 
+{\rtf1\ansi\ansicpg1251\deff0\uc1
+{\fonttbl
+{\f0\fnil\fcharset204\fprq0\fttruetype Courier New;}
+{\f1\fnil\fcharset204\fprq0\fttruetype Liberation Sans;}
+{\f2\fnil\fcharset204\fprq0\fttruetype Liberation Serif;}}
+{\colortbl
+\red0\green0\blue0;
+\red255\green255\blue255;
+\red255\green255\blue255;}
+{\stylesheet
+{\s6\fi-431\li720\sbasedon28\snext28 Contents 1;}
+{\s7\fi-431\li1440\sbasedon28\snext28 Contents 2;}
+{\s1\fi-431\li720 Arrowhead List;}
+{\s27\fi-431\li720\sbasedon28 Lower Roman List;}
+{\s29\tx431\sbasedon20\snext28 Numbered Heading 1;}
+{\s30\tx431\sbasedon21\snext28 Numbered Heading 2;}
+{\s12\fi-431\li720 Diamond List;}
+{\s9\fi-431\li2880\sbasedon28\snext28 Contents 4;}
+{\s8\fi-431\li2160\sbasedon28\snext28 Contents 3;}
+{\s31\tx431\sbasedon22\snext28 Numbered Heading 3;}
+{\s32\fi-431\li720 Numbered List;}
+{\s15\sbasedon28 Endnote Text;}
+{\*\cs14\fs20\super Endnote Reference;}
+{\s4\fi-431\li720 Bullet List;}
+{\s5\tx1584\sbasedon29\snext28 Chapter Heading;}
+{\s35\fi-431\li720 Square List;}
+{\s11\fi-431\li720 Dashed List;}
+{\s22\sb440\sa60\f1\fs24\b\sbasedon28\snext28 Heading 3;}
+{\s37\fi-431\li720 Tick List;}
+{\s24\fi-431\li720 Heart List;}
+{\s40\fi-431\li720\sbasedon32 Upper Roman List;}
+{\s39\fi-431\li720\sbasedon32 Upper Case List;}
+{\s16\fi-288\li288\fs20\sbasedon28 Footnote;}
+{\s19\fi-431\li720 Hand List;}
+{\s18\fs20\sbasedon28 Footnote Text;}
+{\s20\sb440\sa60\f1\fs34\b\sbasedon28\snext28 Heading 1;}
+{\s21\sb440\sa60\f1\fs28\b\sbasedon28\snext28 Heading 2;}
+{\s10\qc\sb240\sa120\f1\fs32\b\sbasedon28\snext28 Contents Header;}
+{\s23\sb440\sa60\f1\fs24\b\sbasedon28\snext28 Heading 4;}
+{\s28\f2\fs24 Normal;}
+{\s26\fi-431\li720\sbasedon32 Lower Case List;}
+{\s2\li1440\ri1440\sa120\sbasedon28 Block Text;}
+{\s33\f0\sbasedon28 Plain Text;}
+{\s34\tx1584\sbasedon29\snext28 Section Heading;}
+{\s25\fi-431\li720 Implies List;}
+{\s3\fi-431\li720 Box List;}
+{\s36\fi-431\li720 Star List;}
+{\*\cs17\fs20\super Footnote Reference;}
+{\s38\fi-431\li720 Triangle List;}
+{\s13\fi-288\li288\sbasedon28 Endnote;}}
+\kerning0\cf0\ftnbj\fet2\ftnstart1\ftnnar\aftnnar\ftnstart1\aftnstart1\aenddoc\revprop3{\*\rdf}{\info\uc1}\deftab720\viewkind1\paperw12240\paperh15840\margl1440\margr1440\widowctrl
+\sectd\sbknone\colsx0\marglsxn1800\margrsxn1800\pgncont\ltrsect
+\pard\plain\ltrpar\qc\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\qc\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\qc\sl240\slmult1\itap0{\f0\fs20\b\lang1049{\*\listtag0}\abinodiroverride\ltrch MSA 1.0  (BUILD 11)}{\f0\fs20\b\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\qc\sl240\slmult1\itap0{\f0\fs20\b\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\qc\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch Copyright(C)}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\qc\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch 2001}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\qc\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch Robert \'d6stling}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\qc\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\qc\sl240\slmult1\itap0{\f0\fs20\ul\lang1049{\*\listtag0}\abinodiroverride\ltrch robost86@hotmail.com}{\f0\fs20\ul\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\ul\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\ul\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 }{\f0\fs20\ul\lang1049{\*\listtag0}Copyright}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\ul\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         License under MIT license. See LICENSE file..}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 }{\f0\fs20\ul\lang1049{\*\listtag0}Bugs?}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\ul\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         When this package is released, there are no known bugs. If}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         you discover a bug, or just want to come with a suggestion or}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         a comment, just e-mail me (robost86@hotmail.com).}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 }{\f0\fs20\ul\lang1049{\*\listtag0}What's MSA?}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\ul\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         MSA is a new freeware x86 assembler. It supports all 8086}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         instructions and most of the 80186/80286 instructions. It}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         only supports flat binary output (.COM files). Written by}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         a 14-year old Swedish programmer (that's why my english}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         isn't very good)-:}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         MSA is pretty fast, much faster than NASM, and the only file}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         you'll need to build a program is MSA.COM (27 KB). It runs}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         fine on my old 286.}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         I wrote MSA in C, using Borland C++ 2.0, but I don't think}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         it should be very hard to port to another compiler. The}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         source code is not commented, not structured, so, it may}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         be a little hard to read...}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         I have not tested MSA in FreeDOS yet, but there should not}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         be any difference between running MSA in a DOS box, real-mode}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         MS-DOS or FreeDOS.}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 }{\f0\fs20\ul\lang1049{\*\listtag0}System Requirements}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 }{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         MSA had been tested on the following computer, and it runs just fine.}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 }{\f0\fs20\ul\lang1049{\*\listtag0}Toshiba 3100}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\ul\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 CPU:    80286}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 RAM:    640 KB}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 HD:     10 MB}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 OS:     Toshiba DOS 5.0}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 Screen: Small B/W plasma screen}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         Your HD will not be filled just by installing MSA...}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 168 KB (full installation)}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 27 KB (minimum installation)}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         MSA comes with both a 8086 and a 80186+ executable.}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 }{\f0\fs20\ul\lang1049{\*\listtag0}Using MSA}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\ul\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         MSA is a command-line program, use your favourite editor to}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         edit the source files. Here are a more detailed description}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         of the different command-line options MSA supports. (These}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         command-line options are case insensitive, like the rest of}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         MSA.}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         =============================================================}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 -o              - Set output file}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         Use: -ofile.com, -odisk.bin}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         There can only be one output file per compile, if more than}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         one output files are present, the last one will be used. If}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         no output file is present, you'll see the built-in help screen.}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         =============================================================}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 -p              - Nr of times to pass the file(s)}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         Use: -p3, -p1000}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         This is an optional command. -p2 is used if you don't type}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         anything else.}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         =============================================================}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 -s              - Set starting point}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         Use: -s0, -s0x7c00}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         This is an optional command, if you don't use this option,}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         the standard DOS .COM starting point (0x100) is used.}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         =============================================================}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 -b              - Set buffer size}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         Use: -b0x400, -b0x100}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         This option changes the size of the output buffer kept in}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         memory. Should be a value between 0x100 (256) and 0x4000}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         (16 KB).}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         =============================================================}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 -m              - Set output level}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         Use: -m0, -m1, -m2}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         m0 means: "only report errors"}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         m1 means: "only report errors and serious warnings"}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         m2 means: "report all"}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         All other commands, not beginning with '-' will be assumed}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         to be input files.}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 }{\f0\fs20\ul\lang1049{\*\listtag0}The syntax of MSA}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\ul\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         MSA:s syntax is similar to the syntax of NASM. I think every}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         documented feature of MSA is supported by NASM, but this does}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         _not_ mean that a NASM program always can be assebled by MSA.}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         For example, MSA has no 32-bit support.}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         }{\f0\fs20\ul\lang1049{\*\listtag0}Constants}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\ul\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         There are two ways of declaring constants in MSA.}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         1.      ident   EQU     value}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         2.      CONST   ident   value}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         I recommend the first way, for compatibility with NASM.}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         A constant value may use following operators:}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 '+', '-', '*', '/' and '%'}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         But NOT:}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 '(' and ')'}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         You may also use following constants:}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                 $ and $$}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         (A non NASM-compatible synonyme for '$' is 'offset')}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         $ is the offset (offset of output file + staring point)}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         $$ is the starting point}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         You may only define integer constants, NOT floating point}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         or string constants.}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         Examples of valid constants:}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         data_start      EQU     $+0x100}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         my_sweet        EQU     0x4*0x13}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         lord            EQU     $$-0x80}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         }{\f0\fs20\ul\lang1049{\*\listtag0}Labels, DB, DW and DD}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\ul\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\ul\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         In MSA, you define labels in the same way as you do in all}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         programming languages,}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch label:}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         where 'label' is the name of your label. There is another way to}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         define a label, only used with DB, DW and DD. This command:}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch fname   DB      "filename.dat",0}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch idword  DW      0x51a0}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         does the same thing as:}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch fname:  DB      "filename.dat",0}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch idword: DB      0x51a0}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         DB can be used to declare strings and 8-bit values:}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch my_db   DB      "this is a string",1,2,3,0x10,0x20,0x30,14%3}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         DW is used only to declare 16-bit variables:}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch my_dw   DW      0x2314,0x5214,0x5382,0x0000,4,1,6}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         DD is used only to declare 32-bit variables:}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch my_dd   DD      0x23a36b14,0x552814,0x5ba4382,0x1000000,4,51,6}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         }{\f0\fs20\ul\lang1049{\*\listtag0}Comments}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\ul\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         Ordninary assembler comments, one-line comments beginning with}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         ';', are the only valid comments in MSA.}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         }{\f0\fs20\ul\lang1049{\*\listtag0}Include}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\ul\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         Does the same thing as typing an extra input file in the command}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         line (adds the file to the 'to do' list).}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         Example:}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         ; f1.asm}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         mov     ax,1}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         include "f2.asm"}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         mov     ax,3}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         =============================================================}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         ; f2.asm}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         mov     ax,2}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         This code will generate following in NASM:}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         mov     ax,1    ; from f1.asm}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         mov     ax,2    ; from f2.asm}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         mov     ax,3    ; from f1.asm}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         , but MSA will assembler this:}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         mov     ax,1    ; from f1.asm}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         mov     ax,3    ; from f1.asm}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         mov     ax,2    ; from f2.asm}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         When MSA finds an 'include' directive, the file is placed as the}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         last item if the 'to do' list, while NASM starts assembling the}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         new file, and when that's done, it returns to the main file.}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         If a file that is allready included in the 'to do' list in included}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         again, nothing happends (to avoid cross-referencing).}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         }{\f0\fs20\ul\lang1049{\*\listtag0}Space}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\ul\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         NASM will assemble this}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         mov     ax, 3}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         cmp     al, 2}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         , but MSA says 'Syntax error'. Spaces aren't allowed everywhere}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         in MSA. Not within identifiers, or between operands (like in the}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         example above). Use this instead:}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         mov     ax,3}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         cmp     al,2}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         }{\f0\fs20\ul\lang1049{\*\listtag0}Opcodes}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\ul\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         If you want to use the short opcodes for the 1-step}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         bit shift/rotation instructions, you'll have to type:}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         shl1    ax}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         ror1    bl}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch         ...}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch               }{\f0\fs20\b\lang1049{\*\listtag0}  22:47 12 Jan 2001}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\abinodiroverride\ltrch                  End of document}{\f0\fs20\lang1049{\*\listtag0}\par}
+\pard\plain\ltrpar\ql\sl240\slmult1\itap0{\f0\fs20\lang1049{\*\listtag0}\par}}

@@ -13,9 +13,7 @@
                 Copyright
                 -=-=-=-=-
 
-        You are free to do whatever you want to do with MSA 1.0
-        (Build 11), except selling it. Feel free to modify the source
-        code, but please don't just delete my copyright.
+        Licensed under MIT license. See LICENSE file.
 
 
                 Bugs?
