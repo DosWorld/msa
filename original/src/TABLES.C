@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright (c) 2000, 2001, 2019 Robert Östling
+Copyright (c) 2000, 2001, 2019 Robert Ostling
 Copyright (c) 2019 DosWorld
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,8 +26,10 @@ SOFTWARE.
         Part of the MSA assembler
 
 */
-
-#define instructions   277
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include "MSA2.H"
 
 t_instruction instruction[instructions] = {
         "aaa","",0,0,0,0,0,OP_CMD_OP,0x37,0,0,0,0,0,0,0,0,
