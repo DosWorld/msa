@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright (c) 2000, 2001, 2019 Robert Östling
+Copyright (c) 2000, 2001, 2019 Robert Ostling
 Copyright (c) 2019 DosWorld
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,10 +27,34 @@ SOFTWARE.
 
 */
 
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <ctype.h>
+#include "MSA2.H"
+
+t_constant *constant = NULL;
+
+int hashCode(char *str) {
+   int result = 0;
+
+   while(*str) {
+      result = result*31 + toupper(*str);
+      str++;
+   }
+   return result;
+}
+
 void out_msg(char* s,int x) {
-        if(x==0) errors++;
-        else warnings++;
-        if(quiet>=x) printf("%06ld: %s\n",linenr,s);
+        if(x==0) {
+               errors++;
+        } else {
+               warnings++;
+        }
+        if(quiet >= x) {
+                printf("%06ld: %s\n",linenr,s);
+        }
 }
 
 void build_address(t_address* a) {
@@ -105,20 +129,44 @@ void get_arg_types(char* s) {
 }
 
 void add_const(char* name, long int value) {
-        int i;
+        t_constant *c;
+        int hash;
 
-        for(i=0;i<constants;i++) {
-                if(!stricmp(constant[i].name,name)) {
-                        if(value!=constant[i].value&&strcmp(name,"offset")&&name[0]!='$') {
+        c = constant;
+        hash = hashCode(name);
+        while(c != NULL) {
+                if((hash == c->hash) && !stricmp(c->name,name)) {
+                        if(value!=c->value&&stricmp(name,"offset")&&name[0]!='$') {
                                 out_msg("Constant changed",2);
                         }
-                        constant[i].value = value;
+                        c->value = value;
                         return;
                 }
+                c = c->next;
         }
-        strcpy(constant[constants].name,name);
-        constant[constants].value = value;
-        constants++;
+        c = malloc(sizeof(t_constant));
+        strcpy(c->name, name);
+        strupr(c->name);
+        c->value = value;
+        c->hash = hash;
+        c->export = 0;
+        c->next = constant;
+        constant = c;
+}
+
+t_constant *find_const(char *name) {
+        t_constant *c;
+        int hash;
+
+        c = constant;
+        hash = hashCode(name);
+        while(c != NULL) {
+                if((hash == c->hash) && !stricmp(c->name, name)) {
+                        break;
+                }
+                c = c->next;
+        }
+        return c;
 }
 
 int is_ident(char c) {
@@ -141,25 +189,48 @@ int is_space(char c) {
         return 0;
 }
 
+int hexdigit(char c) {
+        if(c >= '0' && c <= '9') return c - '0';
+        if(c >= 'a' && c <= 'f') return c - 'a' + 10;
+        if(c >= 'A' && c <= 'F') return c - 'A' + 10;
+        return 0;
+}
+
 long int get_number(char* s) {
         long int value=0;
         int i;
 
         strupr(s);
-        if(s[1]=='X'&&s[0]=='0') {
-                for(i=2;i<strlen(s);i++) {
-                        if(!is_hex_numeric(s[i])) {
-                                out_msg("Invalid digit",0);
+
+        if(s[1]=='X' && s[0]=='0') {
+                s += 2;
+                while(*s) {
+                        if(!is_hex_numeric(*s)) {
+                                out_msg("Invalid digit", 0);
+                        } else {
+                                value = (value << 4) | hexdigit(*s);
                         }
+                        s++;
                 }
-                sscanf(s,"0X%x",&value);
+        } else if(s[1] == 'B' && s[0] == '0') {
+                s += 2;
+                while(*s) {
+                        if(*s != '0' && *s!='1') {
+                                out_msg("Invalid digit", 0);
+                        } else {
+                                value = (value << 1) | (*s - '0');
+                        }
+                        s++;
+                }
         } else {
-                for(i=1;i<strlen(s);i++) {
-                        if(!is_numeric(s[i])) {
-                                out_msg("Invalid digit",0);
+                while(*s) {
+                        if(!is_numeric(*s)) {
+                                out_msg("Invalid digit", 0);
+                        } else {
+                                value = (value * 10) + (*s - '0');
                         }
+                        s++;
                 }
-                sscanf(s,"%ld",&value);
         }
         return value;
 }
@@ -169,6 +240,7 @@ long int get_const(char* s) {
         char tmp[32];
         char sign,found;
         long value=0,x;
+        t_constant *cnst;
 
         for(i=0;i<strlen(s);i++) {
                 sign = '+';
@@ -191,16 +263,13 @@ long int get_const(char* s) {
                 } else if(is_numeric(tmp[0])) {
                         x = get_number(tmp);
                 } else {
-                        found = 0;
-                        for(j=0;j<constants;j++) {
-                                if(!stricmp(constant[j].name,tmp)) {
-                                        x = constant[j].value;
-                                        found = 1;
-                                }
-                        }
-                        if(!found) {
+                        strupr(tmp);
+                        cnst = find_const(tmp);
+                        if(cnst == NULL) {
                                 out_msg("Unknown constant",2);
                                 return 0x1000;
+                        } else {
+                                x = cnst->value;
                         }
                 }
                 switch(sign) {

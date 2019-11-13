@@ -1,8 +1,7 @@
 ;
 ; MIT License
 ;
-; Copyright (c) 2000, 2001, 2019 Robert Östling
-; Copyright (c) 2019 DosWorld
+; Copyright (c) 2000, 2001, 2019 Robert Ostling
 ;
 ; Permission is hereby granted, free of charge, to any person obtaining a copy
 ; of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +32,8 @@
 ;       starfield. NASM and MSA assemble it both.
 ;
 
-                ORG     0X0100
+                PUSH    CS
+                POP     DS
 
                 MOV     AX,0X13
                 INT     0X10
@@ -77,7 +77,8 @@ L1:             DEC     DI
                 INT     0X16
                 MOV     AX,3
                 INT     0X10
-                INT     0X20
+                MOV     AH,0X4C
+                INT     0X21
 
 
 SLUMPA:         XOR     DI,DI

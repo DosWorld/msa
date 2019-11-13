@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright (c) 2000, 2001, 2019 Robert Östling
+Copyright (c) 2000, 2001, 2019 Robert Ostling
 Copyright (c) 2019 DosWorld
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,6 +26,9 @@ SOFTWARE.
         Part of the MSA assembler
 
 */
+
+#ifndef _ASSEMBLR_H_
+#define _ASSEMBLR_H_
 
 #define MAX_CONSTANT            0x0200
 #define MAX_ARGS                0x0006
@@ -100,3 +103,5 @@ typedef struct {
         byte    param_type[4];
         byte    op[10];
 } t_instruction;
+
+#endif

@@ -1,8 +1,7 @@
 ;
 ; MIT License
 ;
-; Copyright (c) 2000, 2001, 2019 Robert Östling
-; Copyright (c) 2019 DosWorld
+; Copyright (c) 2000, 2001, 2019 Robert Ostling
 ;
 ; Permission is hereby granted, free of charge, to any person obtaining a copy
 ; of this software and associated documentation files (the "Software"), to deal

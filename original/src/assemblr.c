@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright (c) 2000, 2001, 2019 Robert Östling
+Copyright (c) 2000, 2001, 2019 Robert Ostling
 Copyright (c) 2019 DosWorld
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,23 +27,22 @@ SOFTWARE.
 
 */
 
-#include "assemblr.h"
-#include "tables.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "msa2.h"
 
-t_constant constant[MAX_CONSTANT];
-int constants = 0;
 char prog[128];
 word ptr;
 long int fsize;
 long int linenr;
-word old_outptr;
-char arg[MAX_ARGS][64];
+char arg[MAX_ARGS][256];
 int args;
+word old_outptr;
 char param[4][32];
 byte param_type[4];
 int params;
-
-#include "misc.c"
 
 void out_long(long int x) {
         outprog[outptr++]=x&0xff;
@@ -59,13 +58,14 @@ void out_word(int x) {
 
 int assemble(char* fname) {
         FILE* infile;
-        char line[128];
+        char line[256];
         char tmp[64];
         byte cf;
         t_address addr;
         int i,j,k,l,found,first_i,first_i2;
         long int m;
         word w;
+        t_constant *c;
 
         if((infile=fopen(fname,"r"))==0) {
                 out_msg("Can not open input file",0);
@@ -74,11 +74,11 @@ int assemble(char* fname) {
 
         linenr = 0;
 
-        while(fgets(prog,128,infile)!=NULL) {
+        while(fgets(prog,256, infile) != NULL) {
                 ptr = 0;
                 get_line(line);
                 linenr++;
-                if(outptr>=out_max-0x80) {
+                if(outptr >= out_max - 0x80) {
                         voutptr += outptr;
                         if(pass==passes-1) fwrite(outprog,outptr,1,outfile);
                         outptr = 0;
@@ -88,7 +88,7 @@ int assemble(char* fname) {
                 split(line);
                 first_i=0;
 
-                add_const("offset",voutptr+outptr+org);
+                add_const("OFFSET",voutptr+outptr+org);
                 add_const("$",voutptr+outptr+org);
                 add_const("$$",org);
 
@@ -155,6 +155,14 @@ int assemble(char* fname) {
                                 out_word(get_const(tmp));
                         }
                 }
+                if(!stricmp(arg[first_i],"export")) {
+                        found=1;
+                        first_i++;
+                        c = find_const(arg[first_i]);
+                        if(c != NULL) {
+                             c->export = 1;
+                        }
+                }
                 if(!stricmp(arg[first_i],"db")) {
                         first_i++;
                         l=0;
@@ -199,10 +207,6 @@ int assemble(char* fname) {
                         else {
                                 out_msg("Syntax error",0);
                         }
-                }
-                if(!stricmp(arg[first_i],"include")) {
-                        add_task(arg[first_i+1]);
-                        found=1;
                 }
                 if(!stricmp(arg[first_i],"org")) {
                         org = get_const(arg[first_i+1]);
