@@ -1,11 +1,11 @@
 # MSA2 x86 assembler for real-mode DOS
 
-MSA2 is a old free x86 assembler. It supports all 8086 instructions and most of the 80186/80286 instructions. It supports formats:
+MSA2 is a old free x86 assembler. It supports all 8086 instructions and most of the 80186/80286 instructions. It supports output formats:
 
-* flat binary output -fbin
-* .com file -fcom
-* .exe file with tiny memory model -ftexe.
-* .ovl overlay file with tiny memory model -fovl (this is the same as texe, but with symbol table).
+* flat binary output **-fbin**
+* .com file **-fcom**
+* .exe file with tiny memory model **-ftexe**.
+* .ovl overlay file with tiny memory model **-fovl** (this is the same as texe, but with symbol table).
 
 Initialy written by a 14-year old Swedish programmer (in 2001).
 
