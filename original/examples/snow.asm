@@ -49,7 +49,7 @@ MINSKNING       EQU     0X08
 RAKETFARG       EQU     0XFD
 FARGER          EQU     3
 
-;                ORG     0X0100
+                ORG     0X0100
 PUSH CS
 POP DS
                 CALL    INIT8
@@ -612,15 +612,15 @@ NEW8:           CMP     WORD[CS:TIMER],0
                 JZ      JUMP8
                 DEC     WORD[CS:TIMER]
 JUMP8:          DB      0XEA
-OLD8            DD      0
+OLD8:           DD      0
 
 DELAY:          MOV     WORD[TIMER],AX
 DELAY0:         CMP     WORD[TIMER],0
                 JNZ     DELAY0
                 RET
 
-CHARSETSTR      DB      " ABCDEFGHIJKLMNOPQRSTUVWXYZèéô0123456789.",0
-CHARSET         DB      5,5,5,5,5
+CHARSETSTR:     DB      " ABCDEFGHIJKLMNOPQRSTUVWXYZèéô0123456789.",0
+CHARSET:        DB      5,5,5,5,5
                 DB      5,5,5,5,5
                 DB      5,5,5,5,5
                 DB      5,5,5,5,5
@@ -867,27 +867,27 @@ CHARSET         DB      5,5,5,5,5
                 DB      5,0,0,5,5
 
 
-MESSAGE         DB      "HAPPY NEW YEAR 2001",0
-MESSAGE3        DB      "ROBERT",0
-MESSAGE4        DB      " 2001 ",0
-MAXX            DW      320
-MAXY            DW      200
-TEXTCOLOR       DB      0XDF
-RSEED           DW      0X6B95
-SNOW            DW      1
-WIND            DW      1
-COUNTER         DB      FART
-SNODJUP         DW      0
-SMALT           DB      0
-MAINWIND        DW      3
-MAINWIND2       DW      -1
-RAKETX          DW      0
-RAKETY          DW      0
-RAKET           DB      0
-RAKETFART       DW      1
-RAKETSTORL      DW      10
-NEWPAL          DB      0
-OLDPAL          DB      0
-RESTER          DB      0
-RAKETER         DB      0
-TIMER           DW      0
+MESSAGE:        DB      "HAPPY NEW YEAR 2001",0
+MESSAGE3:       DB      "ROBERT",0
+MESSAGE4:       DB      " 2001 ",0
+MAXX:           DW      320
+MAXY:           DW      200
+TEXTCOLOR:      DB      0XDF
+RSEED:          DW      0X6B95
+SNOW:           DW      1
+WIND:           DW      1
+COUNTER:        DB      FART
+SNODJUP:        DW      0
+SMALT:          DB      0
+MAINWIND:       DW      3
+MAINWIND2:      DW      -1
+RAKETX:         DW      0
+RAKETY:         DW      0
+RAKET:          DB      0
+RAKETFART:      DW      1
+RAKETSTORL:     DW      10
+NEWPAL:         DB      0
+OLDPAL:         DB      0
+RESTER:         DB      0
+RAKETER:        DB      0
+TIMER:          DW      0

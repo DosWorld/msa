@@ -1,12 +1,10 @@
 
 
-                               MSA 1.0  (BUILD 11)
-                               -=-=-=-=-=-=-=-=-=-
-                                  Copyright(C)
-                                      2001
-                                 Robert ™stling
-                               -=-=-=-=-=-=-=-=-=-
-                               robost86@hotmail.com
+                MSA2 1.0 (BUILD 13)
+                -=-=-=-=-=-=-=-=-=-
+       Copyright(C) 2000 - 2019 Robert Ostling (robost86@hotmail.com)
+       Copyright(C) 2019 DosWord (dosworld@tutanota.com)
+                -=-=-=-=-=-=-=-=-=-
 
 
 
@@ -21,36 +19,44 @@
 
         When this package is released, there are no known bugs. If
         you discover a bug, or just want to come with a suggestion or
-        a comment, just e-mail me (robost86@hotmail.com).
+        a comment, just e-mail me (dosworld@tutanota.com).
 
 
                 What's MSA?
                 -=-=-=-=-=-
 
-        MSA is a new freeware x86 assembler. It supports all 8086
+        MSA2 is a old free x86 assembler. It supports all 8086
         instructions and most of the 80186/80286 instructions. It
-        only supports flat binary output (.COM files). Written by
-        a 14-year old Swedish programmer (that's why my english
-        isn't very good)-:
+        supports formats:
 
-        MSA is pretty fast, much faster than NASM, and the only file
-        you'll need to build a program is MSA.COM (27 KB). It runs
-        fine on my old 286.
+           * flat binary output -fbin
+           * .com file -fcom
+           * .exe file with tiny memory model -ftexe.
+           * .ovl overlay file with tiny memory model -fovl (this
+             is the same as texe, but with symbol table).
 
-        I wrote MSA in C, using Borland C++ 2.0, but I don't think
+        Initialy written by a 14-year old Swedish programmer (that's
+        why my english isn't very good)-:
+
+        MSA2 is pretty fast, much faster than NASM, and the only file
+        you'll need to build a program is MSA2.EXE (35 KB). It runs
+        fine on my old 286. Also, MSA2 does not require DPMI.
+
+        I wrote MSA2 in C, using Borland C++ 2.0, but I don't think
         it should be very hard to port to another compiler. The
         source code is not commented, not structured, so, it may
-        be a little hard to read...
+        be a little hard to read... Now, MSA2 is ported to Watcom C.
 
-        I have not tested MSA in FreeDOS yet, but there should not
-        be any difference between running MSA in a DOS box, real-mode
+        I have not tested MSA2 in FreeDOS yet, but there should not
+        be any difference between running MSA2 in a DOS box, real-mode
         MS-DOS or FreeDOS.
 
 
                 System Requirements  :-)
                 -=-=-=-=-=-=-=-=-=-  -=-
 
-        MSA had been tested on the following computer, and it runs just fine.
+        MSA2 had been tested on the following computer, and it runs
+       just fine.
 
                 Toshiba 3100
                 ============
@@ -61,22 +67,19 @@
                 OS:     Toshiba DOS 5.0
                 Screen: Small B/W plasma screen
 
-        Your HD will not be filled just by installing MSA...
+        Your HD will not be filled just by installing MSA2...
 
                 168 KB (full installation)
-                27 KB (minimum installation)
-
-        MSA comes with both a 8086 and a 80186+ executable.
-
+                35 KB (minimum installation)
 
                 Using MSA
                 -=-=-=-=-
 
-        MSA is a command-line program, use your favourite editor to
+        MSA2 is a command-line program, use your favourite editor to
         edit the source files. Here are a more detailed description
-        of the different command-line options MSA supports. (These
+        of the different command-line options MSA2 supports. (These
         command-line options are case insensitive, like the rest of
-        MSA.
+        MSA2.
 
 
         =============================================================
@@ -88,15 +91,6 @@
         There can only be one output file per compile, if more than
         one output files are present, the last one will be used. If
         no output file is present, you'll see the built-in help screen.
-
-        =============================================================
-
-                -p              - Nr of times to pass the file(s)
-
-        Use: -p3, -p1000
-
-        This is an optional command. -p2 is used if you don't type
-        anything else.
 
         =============================================================
 
@@ -128,6 +122,17 @@
         m2 means: "report all"
 
 
+        =============================================================
+
+                -f              - Set destination format
+
+        Use: -fbin, -fcom, -ftexe, -fovl
+
+        fbin means:  raw binary
+        fcom means:  DOS .com file
+        ftexe means: DOS .exe file with tiny memory model
+        fovl means: the same as texe but with symbol table at end
+
         All other commands, not beginning with '-' will be assumed
         to be input files.
 
@@ -137,14 +142,14 @@
                 -=-=-=-=-=-=-=-=-
 
         MSA:s syntax is similar to the syntax of NASM. I think every
-        documented feature of MSA is supported by NASM, but this does
-        _not_ mean that a NASM program always can be assebled by MSA.
-        For example, MSA has no 32-bit support.
+        documented feature of MSA2 is supported by NASM, but this does
+        _not_ mean that a NASM program always can be assebled by MSA2.
+        For example, MSA2 has no 32-bit support and macros.
 
         Constants
         =========
 
-        There are two ways of declaring constants in MSA.
+        There are two ways of declaring constants in MSA2.
 
         1.      ident   EQU     value
         2.      CONST   ident   value
@@ -170,6 +175,7 @@
         data_start      EQU     $+0x100
         my_sweet        EQU     0x4*0x13
         lord            EQU     $$-0x80
+        color           EQU     0b1011
 
         Labels, DB, DW and DD
         =====================
@@ -183,75 +189,30 @@ label:
         where 'label' is the name of your label. There is another way to
         define a label, only used with DB, DW and DD. This command:
 
-fname   DB      "filename.dat",0
-idword  DW      0x51a0
-
-        does the same thing as:
-
 fname:  DB      "filename.dat",0
-idword: DB      0x51a0
+idword: DW      0x51a0
 
 
         DB can be used to declare strings and 8-bit values:
 
-my_db   DB      "this is a string",1,2,3,0x10,0x20,0x30,14%3
+my_db:  DB      "this is a string",1,2,3,0x10,0x20,0x30,14%3
 
 
         DW is used only to declare 16-bit variables:
 
-my_dw   DW      0x2314,0x5214,0x5382,0x0000,4,1,6
+my_dw:  DW      0x2314,0x5214,0x5382,0x0000,4,1,6
 
 
         DD is used only to declare 32-bit variables:
 
-my_dd   DD      0x23a36b14,0x552814,0x5ba4382,0x1000000,4,51,6
+my_dd:  DD      0x23a36b14,0x552814,0x5ba4382,0x1000000,4,51,6
 
 
         Comments
         ========
 
         Ordninary assembler comments, one-line comments beginning with
-        ';', are the only valid comments in MSA.
-
-
-        Include
-        =======
-
-        Does the same thing as typing an extra input file in the command
-        line (adds the file to the 'to do' list).
-
-        Example:
-
-        ; f1.asm
-
-        mov     ax,1
-        include "f2.asm"
-        mov     ax,3
-
-        =============================================================
-
-        ; f2.asm
-
-        mov     ax,2
-
-
-        This code will generate following in NASM:
-
-        mov     ax,1    ; from f1.asm
-        mov     ax,2    ; from f2.asm
-        mov     ax,3    ; from f1.asm
-
-        , but MSA will assembler this:
-
-        mov     ax,1    ; from f1.asm
-        mov     ax,3    ; from f1.asm
-        mov     ax,2    ; from f2.asm
-
-        When MSA finds an 'include' directive, the file is placed as the
-        last item if the 'to do' list, while NASM starts assembling the
-        new file, and when that's done, it returns to the main file.
-        If a file that is allready included in the 'to do' list in included
-        again, nothing happends (to avoid cross-referencing).
+        ';', are the only valid comments in MSA2.
 
 
         Space
@@ -262,8 +223,8 @@ my_dd   DD      0x23a36b14,0x552814,0x5ba4382,0x1000000,4,51,6
         mov     ax, 3
         cmp     al, 2
 
-        , but MSA says 'Syntax error'. Spaces aren't allowed everywhere
-        in MSA. Not within identifiers, or between operands (like in the
+        , but MSA2 says 'Syntax error'. Spaces aren't allowed everywhere
+        in MSA2. Not within identifiers, or between operands (like in the
         example above). Use this instead:
 
         mov     ax,3

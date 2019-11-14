@@ -20,8 +20,8 @@
 ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
-;
 
+;
 ;
 ;                                    Star
 ;
@@ -32,6 +32,7 @@
 ;       starfield. NASM and MSA assemble it both.
 ;
 
+START:
                 PUSH    CS
                 POP     DS
 
@@ -115,4 +116,5 @@ RANDOM:         MOV     AH,BYTE[RSEED+1]
                 POP     CX
                 RET
 
-RSEED           DW      0X5B8A
+RSEED:          DW      0X5B8A
+END START

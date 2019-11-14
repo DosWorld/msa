@@ -41,6 +41,8 @@ SOFTWARE.
 #define TARGET_TEXE 3
 #define TARGET_OVL 100
 
+#define EXPORT_NAME_LENGTH 32
+
 typedef uint8_t byte;
 typedef uint16_t word;
 typedef uint32_t dword;
@@ -96,63 +98,67 @@ typedef uint32_t dword;
 #define OP_CMD_RM1_SEG          0X0F
 #define OP_CMD_RM2_SEG          0X10
 
+#define OVL_SYMTAB_MAGIK        0xFE33
+
+#define CONST_TEXT 1
+#define CONST_DATA 2
+#define CONST_BSS 3
+#define CONST_EXPR 4
+
 typedef struct {
-        byte    mod;
-        byte    reg;
-        byte    rm;
-        int     disp;
-        byte    op_len;
-        byte    op[0x06];
+    byte    mod;
+    byte    reg;
+    byte    rm;
+    int     disp;
+    byte    op_len;
+    byte    op[0x06];
 } t_address;
 
 typedef struct {
-        char name[32];
-        char export;
-        int hash;
-        long int value;
-        void *next;
+    char name[64];
+    char export;
+    int hash;
+    char type;
+    long int value;
+    void *next;
 } t_constant;
 
 typedef struct {
-        char    name[8];
-        char    name2[8];
-        byte    params;
-        byte    param_type[4];
-        byte    op[10];
+    int     lex1, lex2;
+    char    params;
+    char    param_type[4];
+    char    op[10];
 } t_instruction;
 
 #pragma pack(push)
 #pragma pack(1)
 typedef struct {
-        char  name[8];
-        word  ofs;
-        word  flags;
+    char  name[EXPORT_NAME_LENGTH];
+    word  ofs;
+    word  flags;
 } t_ovl_export;
 #pragma pack(pop)
 
-#define instructions   277
+extern t_instruction instructions[];
 
-extern t_instruction instruction[];
-extern char* reg_8_table[];
-extern char* reg_16_table[];
-extern char* reg_seg_table[];
-extern long int get_const(char* s);
 extern int assemble(char* fname);
 extern void out_msg(char* s,int x);
 extern void build_address(t_address* a);
+
 extern int is_reg_8(char* s);
 extern int is_reg_16(char* s);
 extern int is_reg_seg(char* s);
+
 extern int get_type(char* s);
 extern void get_arg_types(char* s);
-extern void add_const(char* name, long int value);
+extern int hashCode(char *str);
 extern int is_ident(char c);
 extern int is_numeric(char c);
 extern int is_hex_numeric(char c);
 extern int is_space(char c);
 extern long int get_number(char* s);
 extern int get_address(t_address* a, char* s);
-extern int get_line(char* s);
+extern void get_line(char* s);
 extern void split(char* s);
 
 extern int errors, warnings, outptr, voutptr, pass, passes, params;
@@ -167,7 +173,14 @@ extern char prog[128];
 extern word ptr;
 extern char arg[MAX_ARGS][256];
 extern int args;
-extern t_constant *constant;
+
+extern t_constant *constants;
+extern void add_const(char* name, int type, long int value);
+extern long int get_const(char* s);
 extern t_constant *find_const(char *name);
+
+extern word entry_point;
+extern char entry_point_def;
+extern char *inputname;
 
 #endif

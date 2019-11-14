@@ -109,4 +109,4 @@ RANDOM:         MOV     AH,BYTE[RSEED+1]
                 POP     CX
                 RET
 
-RSEED           DW      0X5A8B
+RSEED:          DW      0X5A8B

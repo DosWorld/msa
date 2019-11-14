@@ -77,7 +77,7 @@ F12:            MOV     BYTE[CS:WANTPASS],1
                 OUT     0X21,AL
 QUIT9:          POP     AX
                 DB      0XEA
-OLD9            DD      0
+OLD9:           DD      0
 
 PASS_REC:       CMP     AL,0X57
                 JZ      PASS_REC_DONE
@@ -123,14 +123,14 @@ WANT_PASS_DONE:
                 POP     AX
                 IRET
 
-PASSREC         DB      0
-WANTPASS        DB      0
-PASSPOS         DW      0
-PASSCORR        DW      0
-PASSWORD        EQU     $
+PASSREC:        DB      0
+WANTPASS:       DB      0
+PASSPOS:        DW      0
+PASSCORR:       DW      0
 
+PASSWORD        EQU     $
 EOF             EQU     $+0X20
 
-STR_INSTALLED   DB      "PASSWORD 1.0",0X0D,0X0A
+STR_INSTALLED:  DB      "PASSWORD 1.0",0X0D,0X0A
                 DB      "COPYRIGHT(C) 2001 ROBERT ™STLING",0X0D,0X0A,0X0D,0X0A
                 DB      "TSR INSTALLED",0X0D,0X0A,"$"
