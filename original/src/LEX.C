@@ -31,8 +31,8 @@ SOFTWARE.
 #include <stdint.h>
 #include <ctype.h>
 #include <string.h>
-#include "msa2.h"
-#include "lex.h"
+#include "MSA2.H"
+#include "LEX.H"
 
 int lexId[192];
 int lexHash[192];

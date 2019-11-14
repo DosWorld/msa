@@ -182,5 +182,5 @@ extern t_constant *find_const(char *name);
 extern word entry_point;
 extern char entry_point_def;
 extern char *inputname;
-
+#define stricmp strcasecmp
 #endif
