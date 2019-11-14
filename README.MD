@@ -1,11 +1,10 @@
+# MSA2 x86 assembler for real-mode DOS
      ____    ____   ______        _        _____   
     |_   \  /   _|.' ____ \      / \      / ___ `. 
       |   \/   |  | (___ \_|    / _ \    |_/___) | 
       | |\  /| |   _.____`.    / ___ \    .'____.' 
      _| |_\/_| |_ | \____) | _/ /   \ \_ / /_____  
     |_____||_____| \______.'|____| |____||_______| 
-
-# MSA2 x86 assembler for real-mode DOS
 
 MSA2 is a old free x86 assembler. It supports all 8086 instructions and most of the 80186/80286 instructions. It supports output formats:
 
