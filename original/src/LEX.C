@@ -36,26 +36,27 @@ SOFTWARE.
 
 int lexId[192];
 int lexHash[192];
-char* lexStr[192];
+const char *lexStr[192];
 int lexPtr;
 
-void addLex(int id, char *str) {
+void addLex(int id, const char *str) {
     lexId[lexPtr] = id;
     lexStr[lexPtr] = str;
     lexHash[lexPtr] = hashCode(str);
     lexPtr++;
 }
 
-int lookupLex(char *str) {
+int lookupLex(const char *str) {
     int i, hash;
 
     if(*str == 0) {
         return LEX_NONE;
     }
+
     hash = hashCode(str);
     for(i = 0; i < lexPtr; i++) {
         if(hash == lexHash[i]) {
-            if(!stricmp(lexStr[i], str)) {
+            if(!strcmp(lexStr[i], str)) {
                 return lexId[i];
             }
         }
@@ -184,6 +185,7 @@ void init_lex() {
     addLex(LEX_SAR1, "SAR1");
     addLex(LEX_SAR, "SAR");
     addLex(LEX_RET, "RET");
+    addLex(LEX_RET, "RETN");
     addLex(LEX_RETF, "RETF");
     addLex(LEX_SALC, "SALC");
     addLex(LEX_SBB, "SBB");

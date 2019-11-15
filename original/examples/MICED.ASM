@@ -648,7 +648,7 @@ INSERT1:        DEC     SI
                 LOOP    INSERT1
                 RET
 
-INPUT:          push    ax
+INPUT:          PUSH    ax
                 push    cx
                 mov     cx,1
 input2:         mov     ah,0
@@ -748,25 +748,25 @@ STRCPY:         MOV     AL,BYTE[DS:BX]
                 JMP     STRCPY
 STRCPY0:        RET
 
-COLOR           DB      0X1E
-LASTCOLOR       DB      0X70
-MARKCOLOR       DB      0X71
-CURX            DW      0
-CURY            DB      0
-CURSORX         DB      0
+COLOR:          DB      0X1E
+LASTCOLOR:      DB      0X70
+MARKCOLOR:      DB      0X71
+CURX:           DW      0
+CURY:           DB      0
+CURSORX:        DB      0
                 DB      0
-CURSORY         DB      0
+CURSORY:        DB      0
                 DB      0
-BEGLINE         DW      0
-MAXLINE         DW      0
-BUFF_PTR        DW      0
-MARK1           DW      0
-MARK2           DW      0
-TAB_SIZE        DB      8
-INSERT_FLAG     DB      0
-MEM_ERROR       DB      "OUT OF MEM",0
-MSG_LOADING     DB      "LOADING...",0
-MENU            DB      " save [A]s e[X]it [S]ave [O]pen [N]ew",0
+BEGLINE:        DW      0
+MAXLINE:        DW      0
+BUFF_PTR:       DW      0
+MARK1:          DW      0
+MARK2:          DW      0
+TAB_SIZE:       DB      8
+INSERT_FLAG:    DB      0
+MEM_ERROR:      DB      "OUT OF MEM",0
+MSG_LOADING:    DB      "LOADING...",0
+MENU:           DB      " save [A]s e[X]it [S]ave [O]pen [N]ew",0
 FNAME           EQU     $
 BUFF            EQU     FNAME+80
 TOTY            EQU     25

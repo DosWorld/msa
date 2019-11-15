@@ -36,14 +36,23 @@ SOFTWARE.
 
 t_constant *constants = NULL;
 
-int hashCode(char *str) {
+int hashCode(const char *str) {
     int result = 0;
 
     while(*str) {
-        result = result * 31 + toupper(*str);
+        result = result * 31 + *str;
         str++;
     }
     return result;
+}
+
+
+inline char is_ident(char c) {
+    return (c>='0' && c<='9') || (c>='a' && c<='z') || (c>='A' && c<='Z') || c=='_' || c=='$' || c=='\'';
+}
+
+inline char is_numeric(char c) {
+    return c >= '0' && c <= '9';
 }
 
 void out_msg(char* s, int x) {
@@ -74,21 +83,21 @@ void build_address(t_address* a) {
         a->op[1] = a->disp;
     } else if(a->mod == 2 || (a->mod == 0 && a->rm == 6)) {
         a->op[1] = (a->disp) & 0xff;
-        a->op[2] = ((a->disp) & 0xff00) >> 8;
+        a->op[2] = (a->disp >> 8) & 0xff;
     }
 }
 
-inline int is_reg(char *s, char *k) {
+inline int is_reg(const char *s, const char *k, int badVal) {
     int i;
     char c1, c2;
     char r1, r2;
 
-    c1 = toupper(*s);
+    c1 = *s;
     s++;
-    c2 = toupper(*s);
+    c2 = *s;
     s++;
     if(*s != 0) {
-        return 8;
+        return badVal;
     }
 
     i = 0;
@@ -101,22 +110,23 @@ inline int is_reg(char *s, char *k) {
         }
         i++;
     }
-    return 8;
+    return badVal;
 }
 
-int is_reg_8(char* s) {
-    return is_reg(s, "ALCLDLBLAHCHDHBH");
+int is_reg_8(const char* s) {
+    return is_reg(s, "ALCLDLBLAHCHDHBH", 8);
 }
 
-int is_reg_16(char* s) {
-    return is_reg(s, "AXCXDXBXSPBPSIDI");
+int is_reg_16(const char* s) {
+    return is_reg(s, "AXCXDXBXSPBPSIDI", 8);
 }
 
-int is_reg_seg(char* s) {
+int is_reg_seg(const char* s) {
     char c1, c2;
-    c1 = toupper(*s);
+
+    c1 = *s;
     s++;
-    c2 = toupper(*s);
+    c2 = *s;
     s++;
     if((c2 != 'S') || (*s != 0)) {
         return 8;
@@ -134,166 +144,156 @@ int is_reg_seg(char* s) {
     return 8;
 }
 
-int get_type(char* s) {
-    if(is_reg_8(s) != 8) return ACC_8 + is_reg_8(s);
-    if(is_reg_16(s) != 8) return ACC_16 + is_reg_16(s);
-    if(is_reg_seg(s) != 8) return SEG + is_reg_seg(s);
+int get_type(const char* s) {
+    int i;
+
+    if((i = is_reg_8(s)) != 8) return ACC_8 + i;
+    if((i = is_reg_16(s)) != 8) return ACC_16 + i;
+    if((i = is_reg_seg(s)) != 8) return SEG + i;
     if(s[4] == '[') {
-        if(!memicmp(s,"BYTE[", 5)) return MEM_8;
-        if(!memicmp(s,"WORD[", 5)) return MEM_16;
+        if(!memcmp(s,"BYTE[", 5)) return MEM_8;
+        if(!memcmp(s,"WORD[", 5)) return MEM_16;
     }
     if(*s == '[') return MEM_16;
     return IMM;
 }
 
-void get_arg_types(char* s) {
-    int i=0,j;
-    char tmp[64];
+void get_arg_types(const char* s) {
+    char tmp[64], *p;
 
-    params=0;
-    while(s[i]!=0) {
-        j = 0;
-        while(s[i]!=','&&s[i]!=0) {
-            tmp[j++]=s[i++];
+    params = 0;
+    while(*s) {
+        p = tmp;
+        while(*s <= ' ' && *s) {
+            s++;
         }
-        if(tmp[j-1]==',') tmp[j-1]=0;
-        tmp[j]=0;
-        strcpy(param[params],tmp);
-        param_type[params++]=get_type(tmp);
-        if(s[i]==',') i++;
+        while(*s != ',' && *s) {
+            *p = *s;
+            p++;
+            s++;
+        }
+        *p = 0;
+        while(*p <= ' ' && (p + 1 != tmp)) {
+            *p = 0;
+            p--;
+        }
+        strcpy(param[params], tmp);
+        param_type[params++] = get_type(tmp);
+        if(*s == ',') {
+            s++;
+        }
     }
 }
 
-void add_const(char* name, int type, long int value) {
+t_constant *add_const(const char* name, int type, long int value) {
     t_constant *c;
     int hash;
 
     c = constants;
     hash = hashCode(name);
+
     while(c != NULL) {
-        if((hash == c->hash) && !stricmp(c->name, name)) {
-            if(value != c->value && stricmp(name,"offset") && name[0] != '$') {
-                out_msg("Constant changed", 2);
+        if(hash == c->hash) {
+            if(!strcmp(c->name, name)) {
+                if(value != c->value) {
+                    out_msg("Constant changed", 2);
+                }
+                c->value = value;
+                c->type = type;
+                return c;
             }
-            c->value = value;
-            return;
         }
         c = c->next;
     }
     c = malloc(sizeof(t_constant));
     strcpy(c->name, name);
-    strupr(c->name);
     c->value = value;
     c->hash = hash;
     c->type = type;
     c->export = 0;
     c->next = constants;
-    constants = c;
+    return constants = c;
 }
 
-t_constant *find_const(char *name) {
+t_constant *find_const(const char *name) {
     t_constant *c;
     int hash;
 
     c = constants;
     hash = hashCode(name);
     while(c != NULL) {
-        if((hash == c->hash) && !stricmp(c->name, name)) {
-            break;
+        if(hash == c->hash) {
+            if(!strcmp(c->name, name)) {
+                break;
+            }
         }
         c = c->next;
     }
     return c;
 }
 
-int is_ident(char c) {
-    if((c>='0'&&c<='9')||(c>='a'&&c<='z')||(c>='A'&&c<='Z')||c=='_'||c=='$'||c=='\'') return 1;
+inline char is_math(char c) {
+    return c == '+' || c == '-' || c == '*' || c == '/' || c == '%';
+}
+
+char inline bindigit(char c) {
+    if(c == '0' || c == '1') return c - '0';
+    out_msg("Invalid binary digit", 0);
     return 0;
 }
 
-int is_numeric(char c) {
-    if(c >= '0' && c <= '9') return 1;
+char inline decdigit(char c) {
+    if(c >= '0' || c <= '9') return c - '0';
+    out_msg("Invalid decimal digit", 0);
     return 0;
 }
 
-int is_hex_numeric(char c) {
-    if((c>='0' && c<='9') || (c>='a' && c<='f') || (c>='A' && c<='F')) return 1;
-    return 0;
-}
-
-int is_space(char c) {
-    return c && c <= ' ';
-}
-
-int hexdigit(char c) {
+char inline hexdigit(char c) {
     if(c >= '0' && c <= '9') return c - '0';
     if(c >= 'a' && c <= 'f') return c - 'a' + 10;
     if(c >= 'A' && c <= 'F') return c - 'A' + 10;
-    out_msg("Invalid digit", 0);
+    out_msg("Invalid hex digit", 0);
     return 0;
 }
 
 long int get_number(char* s) {
-    long int value=0;
-    int i;
-    char c;
+    long int value = 0;
+    char c = s[1];
 
-    c = toupper(s[1]);
-
-    if(c =='X' && s[0] == '0') {
+    if(c == 'X' && *s == '0') {
         s += 2;
-        while(*s) {
-            if(!is_hex_numeric(*s)) {
-                out_msg("Invalid digit", 0);
-            } else {
-                value = (value << 4) | hexdigit(*s);
-            }
+        while(c = *s) {
+            value = (value << 4) | hexdigit(c);
             s++;
         }
-    } else if(c == 'B' && s[0] == '0') {
+    } else if(c == 'B' && *s == '0') {
         s += 2;
-        while(*s) {
-            if(*s != '0' && *s!='1') {
-                out_msg("Invalid digit", 0);
-            } else {
-                value = (value << 1) | (*s - '0');
-            }
+        while(c = *s) {
+            value = (value << 1) | bindigit(c);
             s++;
         }
     } else {
-        while(*s) {
-            if(!is_numeric(*s)) {
-                out_msg("Invalid digit", 0);
-            } else {
-                value = (value * 10) + (*s - '0');
-            }
+        while(c = *s) {
+            value = (value * 10) + decdigit(c);
             s++;
         }
     }
     return value;
 }
 
-long int get_const(char* s) {
+long int get_const(const char* s) {
     int i, j, hash;
-    char tmp[32], sign;
+    char tmp[32], tmp2[64], sign;
     long value, x;
     t_constant *c;
 
     value = 0;
 
     while(*s != 0) {
-        sign = '+';
-        switch(*s) {
-        case '+':
-        case '-':
-        case '*':
-        case '/':
-        case '%':
-            sign = *s;
+        if(is_math(sign = *s)) {
             s++;
-            break;
-        default:
-            break;
+        } else {
+            sign = '+';
         }
         j = 0;
         while(is_ident(*s)) {
@@ -308,12 +308,12 @@ long int get_const(char* s) {
         } else if(is_numeric(tmp[0])) {
             x = get_number(tmp);
         } else {
-            c = find_const(tmp);
             if((c = find_const(tmp)) != NULL) {
                 x = c->value;
             } else {
                 if(pass) {
-                    out_msg("Unknown constant", 1);
+                    sprintf(tmp2, "Undefined constant %s", tmp);
+                    out_msg(tmp2, 1);
                 }
                 return 0x00;
             }
@@ -335,7 +335,8 @@ long int get_const(char* s) {
             value = value % x;
             break;
         default:
-            out_msg("Unknown math operation", 2);
+            sprintf(tmp2, "Unknown math operation %c", sign);
+            out_msg(tmp2, 2);
             break;
         }
     }
@@ -349,29 +350,29 @@ int get_address(t_address* a, char* s) {
     byte seg_pre;
     word x;
 
-    if(is_reg_8(s) < 8) {
-        a->rm = is_reg_8(s);
+    if((i = is_reg_8(s)) < 8) {
+        a->rm = i;
         a->mod = 3;
         return 0;
-    } else if(is_reg_16(s) < 8) {
-        a->rm = is_reg_16(s);
+    } else if((i = is_reg_16(s)) < 8) {
+        a->rm = i;
         a->mod = 3;
         return 0;
     }
 
-    while(s[i] != '[' && s[i] != 0) {
-        i++;
+    while(*s != '[' && *s) {
+        s++;
     }
 
-    if(s[i]==0) {
+    if(*s == 0) {
         return 1;
     }
-    i++;
-    j = i;
+    s++;
+    j = i = 0;
 
-    if(s[i+2] == ':') {
-        c1 = toupper(s[i]);
-        if(toupper(s[i+1]) != 'S') {
+    if(s[2] == ':') {
+        c1 = *s;
+        if(s[1] != 'S') {
             out_msg("Syntax error", 0);
             seg_pre = 0x90;
         } else if(c1 == 'C') {
@@ -389,47 +390,46 @@ int get_address(t_address* a, char* s) {
         for(k = old_outptr + 4; k > old_outptr; k--) {
             outprog[k] = outprog[k-1];
         }
-        i += 3;
-        j = i;
+        s += 3;
         outprog[old_outptr] = seg_pre;
         outptr++;
     }
-
-    if(!memicmp(&s[i],"BX+SI",5)) {
+    c1 = s[2] == '+';
+    if(c1 && !memcmp(s, "BX+SI", 5)) {
         a->rm = 0;
-        i += 5;
-    } else if(!memicmp(&s[i],"BX+DI",5)) {
+        s += 5;
+    } else if(c1 && !memcmp(s, "BX+DI", 5)) {
         a->rm = 1;
-        i += 5;
-    } else if(!memicmp(&s[i],"BP+SI",5)) {
+        s += 5;
+    } else if(c1 && !memcmp(s, "BP+SI", 5)) {
         a->rm = 2;
-        i += 5;
-    } else if(!memicmp(&s[i],"BP+DI",5)) {
+        s += 5;
+    } else if(c1 && !memcmp(s, "BP+DI", 5)) {
         a->rm = 3;
-        i += 5;
-    } else if(!memicmp(&s[i],"SI",2)) {
+        s += 5;
+    } else if(!memcmp(s, "SI", 2)) {
         a->rm = 4;
-        i += 2;
-    } else if(!memicmp(&s[i],"DI",2)) {
+        s += 2;
+    } else if(!memcmp(s, "DI", 2)) {
         a->rm = 5;
-        i += 2;
-    } else if(!memicmp(&s[i],"BP",2)) {
+        s += 2;
+    } else if(!memcmp(s, "BP", 2)) {
         a->rm = 6;
-        i += 2;
-    } else if(!memicmp(&s[i],"BX",2)) {
+        s += 2;
+    } else if(!memcmp(s, "BX", 2)) {
         a->rm = 7;
-        i += 2;
+        s += 2;
     } else {
         a->mod = 0;
         a->rm = 6;
         s[strlen(s) - 1]=0;
-        a->disp = get_const(&s[j]);
+        a->disp = get_const(s);
         return 0;
     }
 
-    if(s[i] == '+' || s[i] == '-' || s[i] == '*' || s[i] == '/' || s[i] == '%') {
-        s[strlen(s) - 1]=0;
-        a->disp = get_const(&s[i]);
+    if(is_math(*s)) {
+        s[strlen(s) - 1] = 0;
+        a->disp = get_const(s);
         a->mod = a->disp < 0x80 ? 1 : 2;
     } else {
         a->mod = 0;
@@ -445,28 +445,31 @@ int get_address(t_address* a, char* s) {
 
 void get_line(char* s) {
     int i = 0;
-    byte cf=0;
-    char *p;
+    char cf = 0;
+    char *os, *p;
 
-    p = s;
-    while(prog[ptr] && prog[ptr] <= ' ') {
-        ptr++;
+    os = s;
+    p = prog + ptr;
+    while(*p && *p <= ' ') {
+        p++;
     }
 
-    while(prog[ptr] != 0x0d && prog[ptr] !=0x0a && prog[ptr]) {
-        if(prog[ptr]=='"') cf ^= 1;
-        if(prog[ptr]==';'&& !cf) {
+    while(*p) {
+        if(*p == '"') cf ^= 1;
+        if(*p == ';'&& !cf) {
             *s = 0;
             break;
         }
         else {
-            *s = prog[ptr++];
+            *s = *p;
             s++;
+            p++;
         }
     }
+    ptr = p - prog;
     *s = 0;
-    p--;
-    while(p != s && (*s <= ' ')) {
+    os--;
+    while(os != s && (*s <= ' ')) {
         *s = 0;
         s--;
     }
@@ -474,7 +477,7 @@ void get_line(char* s) {
 
 
 void split(char* s) {
-    byte sf = 1, cf = 0;
+    char sf = 1, cf = 0, c;
     int i, wp = 0;
 
     for(i = 0; i < MAX_ARGS; i++) {
@@ -482,24 +485,27 @@ void split(char* s) {
     }
 
     args = 0;
-    i = 0;
-    while(*s) {
-        if(s[i]=='\"' && cf == 0) {
+
+    while(*s <= ' ' && *s) {
+        s++;
+    }
+
+    while(c = *s) {
+        if(c == '\"' && cf == 0) {
             cf = 1;
-            arg[args][wp++] = *s;
-        } else if(*s == '\"' && cf == 1) {
+            arg[args][wp++] = c;
+        } else if(c == '\"' && cf == 1) {
             arg[args][wp++] = '\"';
-            cf = 0;
+            sf = cf = 0;
+        } else if(c != '\"' && cf == 1) {
+            arg[args][wp++] = c;
+        } else if(c <= ' ' && sf == 1) {
+        } else if(c != ' '&& sf == 1) {
             sf = 0;
-        } else if(*s != '\"' && cf == 1) {
-            arg[args][wp++]=*s;
-        } else if(*s == ' ' && sf == 1) {
-        } else if(*s != ' '&& sf == 1) {
-            sf = 0;
-            arg[args][wp++] = *s;
-        } else if(*s != ' ' && sf == 0) {
-            arg[args][wp++] = *s;
-        } else if(*s == ' ' && sf == 0) {
+            arg[args][wp++] = toupper(c);
+        } else if(c != ' ' && sf == 0) {
+            arg[args][wp++] = toupper(c);
+        } else if(c <= ' ' && sf == 0) {
             sf = 1;
             arg[args++][wp] = 0;
             wp = 0;

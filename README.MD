@@ -6,21 +6,22 @@
      _| |_\/_| |_ | \____) | _/ /   \ \_ / /_____  
     |_____||_____| \______.'|____| |____||_______| 
 
-MSA2 is a old free x86 assembler. It supports all 8086 instructions and most of the 80186/80286 instructions. It supports output formats:
+MSA2 is a old free x86 assembler. It supports all 8086 instructions and
+most of the 80186/80286 instructions. It supports output formats:
 
 * flat binary output **-fbin**
 * .com file **-fcom**
 * .exe file with tiny memory model **-ftexe**.
 * .ovl overlay file with tiny memory model **-fovl** (this is the same as texe, but with symbol table).
 
-Initialy written by a 14-year old Swedish programmer (in 2001).
+Initialy written by a 14-year old Swedish programmer (in 2000-2001) in
+Borland C++ 2.0. Now, MSA2 is ported to Watcom C.
 
-MSA2 is pretty fast, much faster than NASM, and the only file you'll need to build a program is MSA2.EXE (35 KB). It runs fine on my old 286. Also, MSA2 does not require DPMI.
+MSA2 is pretty fast and the only file you'll need to build a program is
+MSA2.EXE (30 KB). It runs fine on my old 286. MSA2 does not require DPMI.
 
-I wrote MSA2 in C, using Borland C++ 2.0, but I don't think it should be very hard to port to another compiler. The source code is not commented, not structured, so, it may be a little hard to read...
-Now, MSA2 is ported to Watcom C.
-
-I have not tested MSA2 in FreeDOS yet, but there should not be any difference between running MSA2 in a DOS box, real-mode MS-DOS or FreeDOS.
+I have not tested MSA2 in FreeDOS yet, but there should not be any
+difference between running MSA2 in a DOS box, real-mode MS-DOS or FreeDOS.
 
 ## Build MSA2
 

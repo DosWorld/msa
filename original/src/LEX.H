@@ -183,7 +183,7 @@ SOFTWARE.
 #define LEX_INT 3000
 #define LEX_JMP 3020
 
-extern int lookupLex(char *);
+extern int lookupLex(const char *);
 extern void init_lex();
 extern void done_lex();
 

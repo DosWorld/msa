@@ -38,7 +38,7 @@ START:
 
                 MOV     AX,0X13
                 INT     0X10
-                MOV     AX,0XA000
+                MOV     AX,0xA000
                 MOV     ES,AX
 
 MAIN_LOOP:

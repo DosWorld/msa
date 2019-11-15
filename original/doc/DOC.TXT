@@ -38,9 +38,9 @@
         Initialy written by a 14-year old Swedish programmer (that's
         why my english isn't very good)-:
 
-        MSA2 is pretty fast, much faster than NASM, and the only file
-        you'll need to build a program is MSA2.EXE (35 KB). It runs
-        fine on my old 286. Also, MSA2 does not require DPMI.
+        MSA2 is pretty fast, and the only file you'll need to build
+        a program is MSA2.EXE (35 KB). It runs fine on my old 286.
+        MSA2 does not require DPMI.
 
         I wrote MSA2 in C, using Borland C++ 2.0, but I don't think
         it should be very hard to port to another compiler. The
@@ -162,10 +162,8 @@
 
         You may also use following constants:
                 $ and $$
-        (A non NASM-compatible synonyme for '$' is 'offset')
 
-        $ is the offset (offset of output file + staring point)
-        $$ is the starting point
+        $ is the offset, $$ is the starting point
 
         You may only define integer constants, NOT floating point
         or string constants.
@@ -242,6 +240,6 @@ my_dd:  DD      0x23a36b14,0x552814,0x5ba4382,0x1000000,4,51,6
         ...
 
 
-                22:47 12 Jan 2001
+                23:55 14 Nov 2019
                 -=-=-=-=-=-=-=-=-
                  End of document

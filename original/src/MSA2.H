@@ -32,7 +32,7 @@ SOFTWARE.
 
 #define MAIN_VERSION    1
 #define SUB_VERSION     0
-#define BUILD           13
+#define BUILD           14
 #define PROG_NAME       "MSA2"
 
 #define TARGET_UNDEF 0
@@ -145,17 +145,13 @@ extern int assemble(char* fname);
 extern void out_msg(char* s,int x);
 extern void build_address(t_address* a);
 
-extern int is_reg_8(char* s);
-extern int is_reg_16(char* s);
-extern int is_reg_seg(char* s);
+extern int is_reg_8(const char* s);
+extern int is_reg_16(const char* s);
+extern int is_reg_seg(const char* s);
 
-extern int get_type(char* s);
-extern void get_arg_types(char* s);
-extern int hashCode(char *str);
-extern int is_ident(char c);
-extern int is_numeric(char c);
-extern int is_hex_numeric(char c);
-extern int is_space(char c);
+extern int get_type(const char* s);
+extern void get_arg_types(const char* s);
+extern int hashCode(const char *str);
 extern long int get_number(char* s);
 extern int get_address(t_address* a, char* s);
 extern void get_line(char* s);
@@ -169,18 +165,18 @@ extern FILE *outfile;
 extern long int linenr;
 extern char param[4][32];
 extern word old_outptr;
-extern char prog[128];
+extern char prog[];
 extern word ptr;
 extern char arg[MAX_ARGS][256];
 extern int args;
 
 extern t_constant *constants;
-extern void add_const(char* name, int type, long int value);
-extern long int get_const(char* s);
-extern t_constant *find_const(char *name);
+extern t_constant *add_const(const char* name, int type, long int value);
+extern long int get_const(const char* s);
+extern t_constant *find_const(const char *name);
 
 extern word entry_point;
 extern char entry_point_def;
 extern char *inputname;
-#define stricmp strcasecmp
+
 #endif

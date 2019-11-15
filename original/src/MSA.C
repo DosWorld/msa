@@ -163,12 +163,17 @@ char write_exe_header(FILE *o, word entry_point, word image_size, word bss_size)
         return 1;
     }
 
+    if(target == TARGET_OVL) {
+bss_par = bss_size & 0x0f !=0 ? (bss_size >> 4 + 1) : (bss_size >> 4);
+}
+    if(target == TARGET_TEXE) {
     bss_par = -(image_size + bss_size);
     if((bss_par & 0x0f) != 0) {
         bss_par = bss_par >> 4 + 1;
     } else {
         bss_par = bss_par >> 4;
     }
+}
     bss_par &= 0x0fff;
 
     inlastblock = image_size & 0x1ff;
@@ -237,22 +242,23 @@ void main(int argc, char* argv[]) {
     }
     target = TARGET_UNDEF;
     outname[0] = 0;
+    linenr = 0;
     for(i = 1; i < argc; i++) {
         if(argv[i][0]=='-') {
             switch(toupper(argv[i][1])) {
             case 'F':
-                if(!stricmp(&argv[i][2],"bin")) {
+                if(!strcasecmp(&argv[i][2],"bin")) {
                     target = TARGET_BIN;
-                } else if(!stricmp(&argv[i][2],"com")) {
+                } else if(!strcasecmp(&argv[i][2],"com")) {
                     target = TARGET_COM;
                     org = 0x100;
                     entry_point = 0x100;
                     entry_point_def = 1;
-                } else if(!stricmp(&argv[i][2],"texe")) {
+                } else if(!strcasecmp(&argv[i][2],"texe")) {
                     target = TARGET_TEXE;
                     entry_point = 0;
                     entry_point_def = 0;
-                } else if(!stricmp(&argv[i][2],"ovl")) {
+                } else if(!strcasecmp(&argv[i][2],"ovl")) {
                     target = TARGET_OVL;
                     entry_point = 0;
                     entry_point_def = 0;
@@ -284,12 +290,12 @@ void main(int argc, char* argv[]) {
     }
 
     if(outname[0] == 0) {
-        printf("No output file.\n");
+        out_msg("No output file.", 0);
         done(1);
     }
 
     if((outprog = malloc(out_max)) == NULL) {
-        printf("Out of memory.\n");
+        out_msg("Out of memory.", 0);
         done(1);
     }
 
@@ -314,6 +320,10 @@ void main(int argc, char* argv[]) {
     bss_size = 0;
     assembleResult = 1;
     code_size = 0;
+
+    add_const("$", CONST_EXPR, 0);
+    add_const("$$", CONST_EXPR, 0);
+
     for(pass = 0; pass < passes && assembleResult; pass++) {
         if((outfile = fopen(outname,"wb"))==0) {
             out_msg("Can't open output file.", 0);

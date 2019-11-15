@@ -1,32 +1,29 @@
 all: msa2.exe
 
 msa2.exe: msa.obj misc.obj assemblr.obj tables.obj lex.obj
-	wcl msa.obj tables.obj assemblr.obj misc.obj lex.obj -fe=msa2.exe -mc -ox -0
+	wcl msa.obj tables.obj assemblr.obj misc.obj lex.obj -fe=msa2.exe -ms -ox -0
         rem upx -9 --8086 msa2.exe
 
-msa.obj: msa.c msa2.h
-	wcc msa.c -mc -ox -0
+msa.obj: msa.c msa2.h lex.h
+	wcc -ms msa.c -ox -0
 
-lex.obj: lex.c lex.h
-	wcc lex.c -mc -ox -0
+lex.obj: lex.c msa2.h lex.h
+	wcc lex.c -ms -ox -0
 
-tables.obj: tables.c msa2.h
-	wcc tables.c -mc -ox -0
+tables.obj: tables.c msa2.h lex.h
+	wcc tables.c -ms -ox -0
 
-assemblr.obj: assemblr.c msa2.h
-	wcc assemblr.c -mc -ox -0
+assemblr.obj: assemblr.c msa2.h lex.h
+	wcc assemblr.c -ms -ox -0
 
 misc.obj: misc.c msa2.h
-	wcc misc.c -mc -ox -0
+	wcc misc.c -ms -ox -0
 
 clean:
 	del msa2.exe
 	del *.obj
 	del *.err
-
-install.com: install.c
-	wcl install.c -fe=install.com -mt -ox -0
+	del *.ori
 
 install: all
 	copy msa2.exe ..\bin\msa2.exe
-	copy install.com ..\bin\install.com

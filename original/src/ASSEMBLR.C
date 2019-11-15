@@ -34,8 +34,9 @@ SOFTWARE.
 #include "MSA2.H"
 #include "LEX.H"
 
-char prog[128];
+char prog[256];
 word ptr;
+
 long int fsize;
 long int linenr;
 char arg[MAX_ARGS][256];
@@ -45,16 +46,52 @@ char param[4][32];
 byte param_type[4];
 int params;
 
-inline void out_long(long int x) {
-    outprog[outptr++] = x & 0xff;
-    outprog[outptr++] = (x & 0xff00) >> 8;
-    outprog[outptr++] = (x & 0xff0000) >> 16;
-    outprog[outptr++] = (x & 0xff000000) >> 24;
-}
-
 inline void out_word(int x) {
     outprog[outptr++] = x & 0xff;
-    outprog[outptr++] = (x & 0xff00) >> 8;
+    outprog[outptr++] = (char)(x >> 8) & 0xff;
+}
+
+inline void out_long(long int x) {
+    outprog[outptr++] = x & 0xff;
+    outprog[outptr++] = (char)(x >> 8) & 0xff;
+    outprog[outptr++] = (char)(x >> 16) & 0xff;
+    outprog[outptr++] = (char)(x >> 24) & 0xff;
+}
+
+char inpbuf[1024*8];
+int inpbufPtr;
+int inpbufCount;
+
+char ffgets(char *p, int size, FILE *f) {
+    char c;
+    int readed = 0;
+
+    while(size != 0) {
+        while(size != 0 && inpbufPtr != inpbufCount) {
+            switch(c = inpbuf[inpbufPtr++]) {
+            case 0x0d:
+                break;
+            case 0x0a:
+                *p = 0;
+                return 1;
+            default:
+                readed++;
+                *p = c;
+                p++;
+                size--;
+            }
+        }
+        if(inpbufPtr == inpbufCount) {
+            inpbufPtr = 0;
+            inpbufCount = fread(inpbuf, 1, sizeof(inpbuf), f);
+            if(inpbufCount == 0) {
+                *p = 0;
+                return readed != 0;
+            }
+        }
+    }
+    *p = 0;
+    return 1;
 }
 
 int assemble(char* fname) {
@@ -66,11 +103,11 @@ int assemble(char* fname) {
     int i, j, k, l, z, first_i, first_i2;
     long int m;
     word w;
-    t_constant *c;
+    t_constant *org_const, *ofs_const, *c;
     int lex1, lex2;
     t_instruction *cinstr;
 
-    if((infile = fopen(fname,"r")) == NULL) {
+    if((infile = fopen(fname,"rb")) == NULL) {
         out_msg("Can't open input file", 0);
         return 0;
     }
@@ -78,13 +115,17 @@ int assemble(char* fname) {
     linenr = 0;
     stop = 0;
 
-    while((fgets(prog, 256, infile) != NULL) && (!stop)) {
+    ofs_const = find_const("$");
+    org_const = find_const("$$");
+
+    inpbufCount = inpbufPtr = 0;
+    while(ffgets(prog, 256, infile) && (!stop)) {
         ptr = 0;
         get_line(line);
         linenr++;
-        if(outptr >= out_max - 0x80) {
+        if(outptr >= out_max - 256) {
             voutptr += outptr;
-            if(pass == passes-1) {
+            if(pass == passes - 1) {
                 fwrite(outprog, outptr, 1, outfile);
             }
             outptr = 0;
@@ -97,9 +138,7 @@ int assemble(char* fname) {
         k = strlen(arg[first_i]);
         lex1 = lookupLex(arg[first_i]);
 
-        add_const("OFFSET", CONST_EXPR, voutptr + outptr + org);
-        add_const("$", CONST_EXPR, voutptr + outptr + org);
-        add_const("$$", CONST_EXPR, org);
+        ofs_const->value = voutptr + outptr + org;
 
         if(arg[first_i][k-1] == ':') {
             switch(lex1) {
@@ -226,6 +265,7 @@ int assemble(char* fname) {
             continue;
         case LEX_ORG:
             org = get_const(arg[first_i+1]);
+            org_const->value = org;
             found = 1;
             continue;
         case LEX_END:
@@ -239,7 +279,7 @@ int assemble(char* fname) {
             continue;
         }
 
-        if(!stricmp(arg[first_i+1],"equ")) {
+        if(!strcasecmp(arg[first_i+1],"equ")) {
             add_const(arg[first_i], CONST_EXPR, get_const(arg[first_i+2]));
             continue;
         }
@@ -250,15 +290,15 @@ int assemble(char* fname) {
         }
 
         old_outptr = outptr;
-        first_i2 = first_i;
 
         if(found || !arg[first_i][0]) {
             continue;
         }
 
         lex2 = lookupLex(arg[first_i + 1]);
-
+        first_i2 = first_i;
         cinstr = instructions;
+
         while(cinstr->lex1 != LEX_NONE && !found) {
             first_i = first_i2;
             if(lex1 != cinstr->lex1 || (cinstr->lex2 != LEX_NONE && lex2 != cinstr->lex2)) {
@@ -266,9 +306,11 @@ int assemble(char* fname) {
                 continue;
             }
             j = 1;
+
             if(cinstr->lex2 != LEX_NONE) {
                 first_i++;
             }
+
             if(args - first_i >= 2) {
                 get_arg_types(arg[first_i+1]);
             } else {
@@ -278,30 +320,37 @@ int assemble(char* fname) {
                 j = 0;
             }
             for(k = 0; k < params; k++) {
-                if(cinstr->param_type[k] == RM_8) {
+                switch(cinstr->param_type[k]) {
+                case RM_8:
                     if(param_type[k] !=MEM_8 && (param_type[k] < ACC_8 || param_type[k] > BH)) {
                         j = 0;
                     }
-                } else if(cinstr->param_type[k] == RM_16) {
+                    break;
+                case RM_16:
                     if(param_type[k] != MEM_16 && (param_type[k] < ACC_16 || param_type[k] > DI)) {
                         j = 0;
                     }
-                } else if(cinstr->param_type[k] == REG_8) {
-                    if((param_type[k] < ACC_8 || param_type[k]>BH)) {
+                    break;
+                case REG_8:
+                    if((param_type[k] < ACC_8 || param_type[k] > BH)) {
                         j = 0;
                     }
-                } else if(cinstr->param_type[k] == REG_16) {
+                    break;
+                case REG_16:
                     if((param_type[k] < ACC_16 || param_type[k] > DI)) {
                         j = 0;
                     }
-                } else if(cinstr->param_type[k] == REG_SEG) {
-                    if((param_type[k]<ES || param_type[k] > DS)) {
+                    break;
+                case REG_SEG:
+                    if((param_type[k] < ES || param_type[k] > DS)) {
                         j =0;
                     }
-                } else {
+                    break;
+                default:
                     if(param_type[k] != cinstr->param_type[k]) {
                         j = 0;
                     }
+                    break;
                 }
             }
             if(j == 1) {
@@ -323,130 +372,131 @@ int assemble(char* fname) {
                         break;
                     case OP_CMD_PLUSREG8:
                         j++;
-                        if(is_reg_8(param[cinstr->op[j+1]]) == 8) {
+                        if((cf = is_reg_8(param[cinstr->op[j + 1]])) == 8) {
                             out_msg("Syntax error", 0);
                         }
-                        outprog[outptr++] = cinstr->op[j] + is_reg_8(param[cinstr->op[j + 1]]);
+                        outprog[outptr++] = cinstr->op[j] + cf;
                         j++;
                         break;
                     case OP_CMD_PLUSREG16:
                         j++;
-                        if(is_reg_16(param[cinstr->op[j+1]])==8) {
+                        if((cf = is_reg_16(param[cinstr->op[j + 1]])) == 8) {
                             out_msg("Syntax error", 0);
                         }
-                        outprog[outptr++] = cinstr->op[j]+is_reg_16(param[cinstr->op[j + 1]]);
+                        outprog[outptr++] = cinstr->op[j] + cf;
                         j++;
                         break;
                     case OP_CMD_PLUSREGSEG:
                         j++;
-                        if(is_reg_seg(param[cinstr->op[j+1]])==8) {
+                        if((cf = is_reg_seg(param[cinstr->op[j + 1]])) == 8) {
                             out_msg("Syntax error", 0);
                         }
-                        outprog[outptr++] = cinstr->op[j]+is_reg_seg(param[cinstr->op[j + 1]]);
+                        outprog[outptr++] = cinstr->op[j] + cf;
                         j++;
                         break;
                     case OP_CMD_RM1_8:
                         j++;
-                        get_address(&addr,param[cinstr->op[j]]);
-                        addr.reg = is_reg_8(param[cinstr->op[j+1]]);
-                        if(is_reg_8(param[cinstr->op[j+1]]) == 8) {
+                        get_address(&addr, param[cinstr->op[j]]);
+                        if((addr.reg = is_reg_8(param[cinstr->op[j + 1]])) == 8) {
                             out_msg("Syntax error", 0);
                         }
                         build_address(&addr);
-                        for(k=0; k<addr.op_len; k++) {
-                            outprog[outptr++] = addr.op[k];
+                        k = 0;
+                        while(k < addr.op_len) {
+                            outprog[outptr++] = addr.op[k++];
                         }
                         j++;
                         break;
                     case OP_CMD_RM1_16:
                         j++;
                         get_address(&addr,param[cinstr->op[j]]);
-                        addr.reg = is_reg_16(param[cinstr->op[j + 1]]);
-                        if(is_reg_16(param[cinstr->op[j + 1]]) == 8) {
+                        if((addr.reg = is_reg_16(param[cinstr->op[j + 1]])) == 8) {
                             out_msg("Syntax error", 0);
                         }
                         build_address(&addr);
-                        for(k=0; k<addr.op_len; k++) {
-                            outprog[outptr++] = addr.op[k];
+                        k = 0;
+                        while(k < addr.op_len) {
+                            outprog[outptr++] = addr.op[k++];
                         }
                         j++;
                         break;
                     case OP_CMD_RM2_8:
                         j++;
-                        get_address(&addr,param[cinstr->op[j+1]]);
-                        addr.reg = is_reg_8(param[cinstr->op[j]]);
-                        if(is_reg_8(param[cinstr->op[j]]) == 8) {
+                        get_address(&addr, param[cinstr->op[j + 1]]);
+                        if((addr.reg = is_reg_8(param[cinstr->op[j]])) == 8) {
                             out_msg("Syntax error",0);
                         }
                         build_address(&addr);
-                        for(k = 0; k < addr.op_len; k++) {
-                            outprog[outptr++] = addr.op[k];
+                        k = 0;
+                        while(k < addr.op_len) {
+                            outprog[outptr++] = addr.op[k++];
                         }
                         j++;
                         break;
                     case OP_CMD_RM2_16:
                         j++;
-                        get_address(&addr,param[cinstr->op[j + 1]]);
-                        if(is_reg_16(param[cinstr->op[j]]) == 8) {
+                        get_address(&addr, param[cinstr->op[j + 1]]);
+                        if((addr.reg = is_reg_16(param[cinstr->op[j]])) == 8) {
                             out_msg("Syntax error", 0);
                         }
-                        addr.reg = is_reg_16(param[cinstr->op[j]]);
                         build_address(&addr);
-                        for(k=0; k < addr.op_len; k++) {
-                            outprog[outptr++] = addr.op[k];
+                        k = 0;
+                        while(k < addr.op_len) {
+                            outprog[outptr++] = addr.op[k++];
                         }
                         j++;
                         break;
                     case OP_CMD_RM2_SEG:
                         j++;
-                        get_address(&addr,param[cinstr->op[j + 1]]);
-                        addr.reg = is_reg_seg(param[cinstr->op[j]]);
-                        if(is_reg_seg(param[cinstr->op[j]]) == 8) {
+                        get_address(&addr, param[cinstr->op[j + 1]]);
+                        if((addr.reg = is_reg_seg(param[cinstr->op[j]])) == 8) {
                             out_msg("Syntax error", 0);
                         }
                         build_address(&addr);
-                        for(k=0; k<addr.op_len; k++) {
-                            outprog[outptr++] = addr.op[k];
+                        k = 0;
+                        while(k < addr.op_len) {
+                            outprog[outptr++] = addr.op[k++];
                         }
                         j++;
                         break;
                     case OP_CMD_RM1_SEG:
                         j++;
-                        get_address(&addr,param[cinstr->op[j]]);
-                        addr.reg = is_reg_seg(param[cinstr->op[j + 1]]);
-                        if(is_reg_seg(param[cinstr->op[j + 1]]) == 8) {
+                        get_address(&addr, param[cinstr->op[j]]);
+                        if((addr.reg = is_reg_seg(param[cinstr->op[j + 1]])) == 8) {
                             out_msg("Syntax error", 0);
                         }
                         build_address(&addr);
-                        for(k=0; k<addr.op_len; k++) {
-                            outprog[outptr++] = addr.op[k];
+                        k = 0;
+                        while(k < addr.op_len) {
+                            outprog[outptr++] = addr.op[k++];
                         }
                         j++;
                         break;
                     case OP_CMD_RMLINE_8:
                         j++;
-                        get_address(&addr,param[cinstr->op[j + 1]]);
+                        get_address(&addr, param[cinstr->op[j + 1]]);
                         addr.reg = cinstr->op[j];
                         build_address(&addr);
-                        for(k=0; k<addr.op_len; k++) {
-                            outprog[outptr++] = addr.op[k];
+                        k = 0;
+                        while(k < addr.op_len) {
+                            outprog[outptr++] = addr.op[k++];
                         }
                         j++;
                         break;
                     case OP_CMD_RMLINE_16:
                         j++;
-                        get_address(&addr,param[cinstr->op[j + 1]]);
+                        get_address(&addr, param[cinstr->op[j + 1]]);
                         addr.reg = cinstr->op[j];
                         build_address(&addr);
-                        for(k=0; k<addr.op_len; k++) {
-                            outprog[outptr++] = addr.op[k];
+                        k = 0;
+                        while(k < addr.op_len) {
+                            outprog[outptr++] = addr.op[k++];
                         }
                         j++;
                         break;
                     case OP_CMD_REL8:
                         j++;
-                        z = get_const(param[cinstr->op[j]]) - (outptr + org + 1);
-                        if(abs(z) > 127 && pass) {
+                        if(abs(z = get_const(param[cinstr->op[j]]) - (outptr + org + 1)) > 127 && pass) {
                             out_msg("Too long jump", 1);
                         }
                         outprog[outptr] = z & 0xff;
@@ -454,7 +504,7 @@ int assemble(char* fname) {
                         break;
                     case OP_CMD_REL16:
                         j++;
-                        out_word(get_const(param[cinstr->op[j]])-(outptr+org+2));
+                        out_word(get_const(param[cinstr->op[j]])-(outptr + org + 2));
                         break;
                     };
                     j++;
