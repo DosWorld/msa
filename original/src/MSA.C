@@ -164,16 +164,16 @@ char write_exe_header(FILE *o, word entry_point, word image_size, word bss_size)
     }
 
     if(target == TARGET_OVL) {
-bss_par = bss_size & 0x0f !=0 ? (bss_size >> 4 + 1) : (bss_size >> 4);
-}
-    if(target == TARGET_TEXE) {
-    bss_par = -(image_size + bss_size);
-    if((bss_par & 0x0f) != 0) {
-        bss_par = bss_par >> 4 + 1;
-    } else {
-        bss_par = bss_par >> 4;
+        bss_par = bss_size & 0x0f !=0 ? (bss_size >> 4 + 1) : (bss_size >> 4);
     }
-}
+    if(target == TARGET_TEXE) {
+        bss_par = -(image_size + bss_size);
+        if((bss_par & 0x0f) != 0) {
+            bss_par = bss_par >> 4 + 1;
+        } else {
+            bss_par = bss_par >> 4;
+        }
+    }
     bss_par &= 0x0fff;
 
     inlastblock = image_size & 0x1ff;
