@@ -25,7 +25,7 @@ difference between running MSA2 in a DOS box, real-mode MS-DOS or FreeDOS.
 
 ## Build MSA2
 
-You need Watcom C compiler. Just type (in original/src/)
+You need Watcom C compiler (or gcc - for linux). Just type (in original/src/)
 
     make
 
