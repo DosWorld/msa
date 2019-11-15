@@ -35,7 +35,7 @@ SOFTWARE.
 #include "MSA2.H"
 #include "LEX.H"
 
-char ovlboot[] = { 0x0E, 0x1F, 0xBA, 0x0D, 0x00, 0xB4, 0x09, 0xCD, 0x21, 0xB4, 0x4C, 0xCD, 0x21, 0x54, 0x68, 0x69,
+unsigned char ovlboot[] = { 0x0E, 0x1F, 0xBA, 0x0D, 0x00, 0xB4, 0x09, 0xCD, 0x21, 0xB4, 0x4C, 0xCD, 0x21, 0x54, 0x68, 0x69,
                    0x73, 0x20, 0x69, 0x73, 0x20, 0x6F, 0x76, 0x65, 0x72, 0x6C, 0x61, 0x79, 0x20, 0x66, 0x69, 0x6C,
                    0x65, 0x2E, 0x0D, 0x0A, 0x24
                  };
@@ -77,15 +77,15 @@ char write_ovl_boot() {
     return 1;
 }
 
-void recalc_bss_labels(codeSize) {
+void recalc_bss_labels(int code_size) {
     t_constant *c;
 
     c = constants;
     while(c != NULL) {
         if(c->type == CONST_BSS) {
-            c->value += codeSize;
+            c->value += code_size;
         }
-        c = c->next;
+        c = (t_constant *)c->next;
     }
 }
 
@@ -104,10 +104,10 @@ char write_ovl_exports(FILE *o) {
 
     c = constants;
     while(c != NULL) {
-        if(c->export) {
+        if(c->is_export) {
             count++;
         }
-        c = c->next;
+        c = (t_constant *)c->next;
     }
 
     fwrite(&magik, 1, sizeof(magik), o);
@@ -117,13 +117,13 @@ char write_ovl_exports(FILE *o) {
 
     c = constants;
     while(c != NULL) {
-        if(c->export) {
+        if(c->is_export) {
             strncpy(e.name, c->name, EXPORT_NAME_LENGTH);
             e.flags = 0;
             e.ofs = c->value;
             fwrite(&e, 1, sizeof(e), o);
         }
-        c = c->next;
+        c = (t_constant *)c->next;
     }
     return 1;
 }
@@ -206,7 +206,7 @@ void done(int code) {
     t_constant *c;
 
     while(constants != NULL) {
-        c = constants->next;
+        c = (t_constant *)constants->next;
         free(constants);
         constants = c;
     }
@@ -234,7 +234,7 @@ void help(int code) {
     done(code);
 }
 
-void main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
     int i, assembleResult;
 
     if(argc < 2) {
@@ -294,7 +294,7 @@ void main(int argc, char* argv[]) {
         done(1);
     }
 
-    if((outprog = malloc(out_max)) == NULL) {
+    if((outprog = (byte *)malloc(out_max)) == NULL) {
         out_msg("Out of memory.", 0);
         done(1);
     }
@@ -354,4 +354,5 @@ void main(int argc, char* argv[]) {
         done(1);
     }
     done(0);
+    return 0;
 }

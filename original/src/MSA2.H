@@ -116,7 +116,7 @@ typedef struct {
 
 typedef struct {
     char name[64];
-    char export;
+    char is_export;
     int hash;
     char type;
     long int value;
@@ -125,9 +125,9 @@ typedef struct {
 
 typedef struct {
     int     lex1, lex2;
-    char    params;
-    char    param_type[4];
-    char    op[10];
+    int    params;
+    int    param_type[4];
+    int    op[10];
 } t_instruction;
 
 #pragma pack(push)
@@ -142,7 +142,7 @@ typedef struct {
 extern t_instruction instructions[];
 
 extern int assemble(char* fname);
-extern void out_msg(char* s,int x);
+extern void out_msg(const char* s,int x);
 extern void build_address(t_address* a);
 
 extern int is_reg_8(const char* s);

@@ -55,7 +55,7 @@ inline char is_numeric(char c) {
     return c >= '0' && c <= '9';
 }
 
-void out_msg(char* s, int x) {
+void out_msg(const char* s, int x) {
     if(x == 0) {
         errors++;
     } else {
@@ -203,14 +203,14 @@ t_constant *add_const(const char* name, int type, long int value) {
                 return c;
             }
         }
-        c = c->next;
+        c = (t_constant *)c->next;
     }
-    c = malloc(sizeof(t_constant));
+    c = (t_constant *)malloc(sizeof(t_constant));
     strcpy(c->name, name);
     c->value = value;
     c->hash = hash;
     c->type = type;
-    c->export = 0;
+    c->is_export = 0;
     c->next = constants;
     return constants = c;
 }
@@ -227,7 +227,7 @@ t_constant *find_const(const char *name) {
                 break;
             }
         }
-        c = c->next;
+        c = (t_constant *)c->next;
     }
     return c;
 }

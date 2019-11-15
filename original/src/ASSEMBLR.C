@@ -260,7 +260,7 @@ int assemble(char* fname) {
         case LEX_EXPORT:
             first_i++;
             if((c = find_const(arg[first_i])) != NULL) {
-                c->export = 1;
+                c->is_export = 1;
             }
             continue;
         case LEX_ORG:
