@@ -17,8 +17,11 @@ most of the 80186/80286 instructions. It supports output formats:
 Initialy written by a 14-year old Swedish programmer (in 2000-2001) in
 Borland C++ 2.0. Now, MSA2 is ported to Watcom C.
 
-MSA2 is pretty fast and the only file you'll need to build a program is
+**MSA2** is pretty fast and the only file you'll need to build a program is
 MSA2.EXE (30 KB). It runs fine on my old 286. MSA2 does not require DPMI.
+
+**MSA2W** - precompiled binary for Win32. You can compile DOS programs in
+modern Windows without DosBox.
 
 I have not tested MSA2 in FreeDOS yet, but there should not be any
 difference between running MSA2 in a DOS box, real-mode MS-DOS or FreeDOS.
