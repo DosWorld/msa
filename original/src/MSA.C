@@ -40,6 +40,7 @@ unsigned char ovlboot[] = { 0x0E, 0x1F, 0xBA, 0x0D, 0x00, 0xB4, 0x09, 0xCD, 0x21
                    0x65, 0x2E, 0x0D, 0x0A, 0x24
                  };
 
+char err_msg[512];
 char outname[256];
 char *inputname = NULL;
 FILE* outfile;
@@ -137,7 +138,8 @@ void check_entry_point() {
         break;
     case TARGET_COM:
         if(entry_point != 0x0100) {
-            out_msg(".com-file can have entry point only from 0x0100 addr.\n", 0);
+            sprintf(err_msg, "Invalid entry point 0x%04X for .COM-file.", entry_point);
+            out_msg(err_msg, 0);
         }
         break;
     case TARGET_OVL:
@@ -154,7 +156,7 @@ void check_entry_point() {
 }
 
 char write_exe_header(FILE *o, word entry_point, word image_size, word bss_size) {
-    char exe_hdr[0x20];
+    word exe_hdr[0x10];
     int bss_par;
     int block_count;
     int inlastblock;
@@ -176,28 +178,21 @@ char write_exe_header(FILE *o, word entry_point, word image_size, word bss_size)
     }
     bss_par &= 0x0fff;
 
-    inlastblock = image_size & 0x1ff;
-    block_count = (image_size >> 9) & 0x7f;
+    inlastblock = image_size % 512;
+    block_count = image_size / 512;
     if(inlastblock) {
         block_count++;
     }
 
     memset(exe_hdr, 0, sizeof(exe_hdr));
-    exe_hdr[0x00] = 0x4d;
-    exe_hdr[0x01] = 0x5a;
-    exe_hdr[0x02] = inlastblock & 0xff;
-    exe_hdr[0x03] = (inlastblock >> 8) & 0xff;
-    exe_hdr[0x04] = block_count & 0xff;
-    exe_hdr[0x05] = (block_count >> 8) & 0xff;
-    exe_hdr[0x08] = 2;
-    exe_hdr[0x0a] = bss_par & 0xff;
-    exe_hdr[0x0b] = (bss_par >> 8) & 0xff;
-    exe_hdr[0x0c] = bss_par & 0xff;
-    exe_hdr[0x0d] = (bss_par >> 8) & 0xff;
-    exe_hdr[0x10] = 0xff; /* Default SP */
-    exe_hdr[0x11] = 0xfe;
-    exe_hdr[0x14] = entry_point & 0xff; /* Entry point IP */
-    exe_hdr[0x15] = (entry_point >> 8) & 0xff;
+    exe_hdr[0x00] = 0x5a4d;
+    exe_hdr[0x01] = inlastblock;
+    exe_hdr[0x02] = block_count;
+    exe_hdr[0x04] = 2;
+    exe_hdr[0x05] = bss_par;
+    exe_hdr[0x06] = bss_par;
+    exe_hdr[0x08] = 0xfffe; /* Default SP */
+    exe_hdr[0x0a] = entry_point; /* Entry point IP */
 
     return fwrite(exe_hdr, 1, sizeof(exe_hdr), o) == sizeof(exe_hdr);
 }
@@ -215,7 +210,6 @@ void done(int code) {
     if(code != 0) {
         remove(outname);
     }
-
     exit(code);
 }
 

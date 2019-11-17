@@ -196,7 +196,10 @@ t_constant *add_const(const char* name, int type, long int value) {
         if(hash == c->hash) {
             if(!strcmp(c->name, name)) {
                 if(value != c->value) {
-                    out_msg("Constant changed", 2);
+                    if((!pass && type == CONST_TEXT) || (pass && type == CONST_EXPR)) {
+                        sprintf(err_msg, "Constant %s changed", name);
+                        out_msg(err_msg, 2);
+                    }
                 }
                 c->value = value;
                 c->type = type;
@@ -238,13 +241,15 @@ inline char is_math(char c) {
 
 char inline bindigit(char c) {
     if(c == '0' || c == '1') return c - '0';
-    out_msg("Invalid binary digit", 0);
+    sprintf(err_msg, "Invalid binary digit %c", c);
+    out_msg(err_msg, 0);
     return 0;
 }
 
 char inline decdigit(char c) {
     if(c >= '0' || c <= '9') return c - '0';
-    out_msg("Invalid decimal digit", 0);
+    sprintf(err_msg, "Invalid decimal digit %c", c);
+    out_msg(err_msg, 0);
     return 0;
 }
 
@@ -252,7 +257,8 @@ char inline hexdigit(char c) {
     if(c >= '0' && c <= '9') return c - '0';
     if(c >= 'a' && c <= 'f') return c - 'a' + 10;
     if(c >= 'A' && c <= 'F') return c - 'A' + 10;
-    out_msg("Invalid hex digit", 0);
+    sprintf(err_msg, "Invalid hex digit %c", c);
+    out_msg(err_msg, 0);
     return 0;
 }
 
@@ -283,7 +289,7 @@ long int get_number(char* s) {
 
 long int get_const(const char* s) {
     int i, j, hash;
-    char tmp[32], tmp2[64], sign;
+    char tmp[32], sign;
     long value, x;
     t_constant *c;
 
@@ -312,8 +318,8 @@ long int get_const(const char* s) {
                 x = c->value;
             } else {
                 if(pass) {
-                    sprintf(tmp2, "Undefined constant %s", tmp);
-                    out_msg(tmp2, 1);
+                    sprintf(err_msg, "Undefined constant %s", tmp);
+                    out_msg(err_msg, 1);
                 }
                 return 0x00;
             }
@@ -335,8 +341,8 @@ long int get_const(const char* s) {
             value = value % x;
             break;
         default:
-            sprintf(tmp2, "Unknown math operation %c", sign);
-            out_msg(tmp2, 2);
+            sprintf(err_msg, "Unknown math operation %c", sign);
+            out_msg(err_msg, 2);
             break;
         }
     }
@@ -373,7 +379,7 @@ int get_address(t_address* a, char* s) {
     if(s[2] == ':') {
         c1 = *s;
         if(s[1] != 'S') {
-            out_msg("Syntax error", 0);
+            out_msg("Syntax error in segment register name", 0);
             seg_pre = 0x90;
         } else if(c1 == 'C') {
             seg_pre = 0x2e;
@@ -384,7 +390,7 @@ int get_address(t_address* a, char* s) {
         } else if(c1 == 'S') {
             seg_pre = 0x36;
         } else {
-            out_msg("Syntax error", 0);
+            out_msg("Syntax error in segment register name", 0);
             seg_pre = 0x90;
         }
         for(k = old_outptr + 4; k > old_outptr; k--) {

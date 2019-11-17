@@ -124,7 +124,7 @@ typedef struct {
 } t_constant;
 
 typedef struct {
-    int     lex1, lex2;
+    int    lex1, lex2;
     int    params;
     int    param_type[4];
     int    op[10];
@@ -157,6 +157,7 @@ extern int get_address(t_address* a, char* s);
 extern void get_line(char* s);
 extern void split(char* s);
 
+extern char err_msg[];
 extern int errors, warnings, outptr, voutptr, pass, passes, params;
 extern byte quiet;
 extern byte *outprog, param_type[4];

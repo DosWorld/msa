@@ -75,11 +75,11 @@ char ffgets(char *p, int size, FILE *f) {
                 *p = 0;
                 return 1;
             default:
-                readed++;
                 *p = c;
                 p++;
                 size--;
             }
+            readed++;
         }
         if(inpbufPtr == inpbufCount) {
             inpbufPtr = 0;
@@ -119,9 +119,11 @@ int assemble(char* fname) {
     org_const = find_const("$$");
 
     inpbufCount = inpbufPtr = 0;
-    while(ffgets(prog, 256, infile) && (!stop)) {
+    while(fgets(prog, 256, infile) && (!stop)) {
         ptr = 0;
         get_line(line);
+        ofs_const->value = voutptr + outptr + org;
+// printf("%04lx: %s\n", ofs_const->value, line);
         linenr++;
         if(outptr >= out_max - 256) {
             voutptr += outptr;
@@ -137,8 +139,6 @@ int assemble(char* fname) {
 
         k = strlen(arg[first_i]);
         lex1 = lookupLex(arg[first_i]);
-
-        ofs_const->value = voutptr + outptr + org;
 
         if(arg[first_i][k-1] == ':') {
             switch(lex1) {
@@ -279,7 +279,7 @@ int assemble(char* fname) {
             continue;
         }
 
-        if(!strcasecmp(arg[first_i+1],"equ")) {
+        if(lex1 == LEX_NONE && !strcasecmp(arg[first_i+1], "equ")) {
             add_const(arg[first_i], CONST_EXPR, get_const(arg[first_i+2]));
             continue;
         }
@@ -316,10 +316,9 @@ int assemble(char* fname) {
             } else {
                 params = 0;
             }
-            if(cinstr->params != params) {
-                j = 0;
-            }
-            for(k = 0; k < params; k++) {
+
+            if(cinstr->params == params) {
+            for(k = 0; k < params && j; k++) {
                 switch(cinstr->param_type[k]) {
                 case RM_8:
                     if(param_type[k] !=MEM_8 && (param_type[k] < ACC_8 || param_type[k] > BH)) {
@@ -353,6 +352,9 @@ int assemble(char* fname) {
                     break;
                 }
             }
+            } else {
+              j = 0;
+            }
             if(j == 1) {
                 found = 1;
                 j = 0;
@@ -373,7 +375,7 @@ int assemble(char* fname) {
                     case OP_CMD_PLUSREG8:
                         j++;
                         if((cf = is_reg_8(param[cinstr->op[j + 1]])) == 8) {
-                            out_msg("Syntax error", 0);
+                            out_msg("Syntax error, expected reg8", 0);
                         }
                         outprog[outptr++] = cinstr->op[j] + cf;
                         j++;
@@ -381,7 +383,7 @@ int assemble(char* fname) {
                     case OP_CMD_PLUSREG16:
                         j++;
                         if((cf = is_reg_16(param[cinstr->op[j + 1]])) == 8) {
-                            out_msg("Syntax error", 0);
+                            out_msg("Syntax error, expected reg16", 0);
                         }
                         outprog[outptr++] = cinstr->op[j] + cf;
                         j++;
@@ -389,7 +391,7 @@ int assemble(char* fname) {
                     case OP_CMD_PLUSREGSEG:
                         j++;
                         if((cf = is_reg_seg(param[cinstr->op[j + 1]])) == 8) {
-                            out_msg("Syntax error", 0);
+                            out_msg("Syntax error, expected segreg", 0);
                         }
                         outprog[outptr++] = cinstr->op[j] + cf;
                         j++;
@@ -398,7 +400,7 @@ int assemble(char* fname) {
                         j++;
                         get_address(&addr, param[cinstr->op[j]]);
                         if((addr.reg = is_reg_8(param[cinstr->op[j + 1]])) == 8) {
-                            out_msg("Syntax error", 0);
+                            out_msg("Syntax error, expected reg8", 0);
                         }
                         build_address(&addr);
                         k = 0;
@@ -411,7 +413,7 @@ int assemble(char* fname) {
                         j++;
                         get_address(&addr,param[cinstr->op[j]]);
                         if((addr.reg = is_reg_16(param[cinstr->op[j + 1]])) == 8) {
-                            out_msg("Syntax error", 0);
+                            out_msg("Syntax error, expected reg16", 0);
                         }
                         build_address(&addr);
                         k = 0;
@@ -424,7 +426,7 @@ int assemble(char* fname) {
                         j++;
                         get_address(&addr, param[cinstr->op[j + 1]]);
                         if((addr.reg = is_reg_8(param[cinstr->op[j]])) == 8) {
-                            out_msg("Syntax error",0);
+                            out_msg("Syntax error, expected reg8",0);
                         }
                         build_address(&addr);
                         k = 0;
@@ -437,7 +439,7 @@ int assemble(char* fname) {
                         j++;
                         get_address(&addr, param[cinstr->op[j + 1]]);
                         if((addr.reg = is_reg_16(param[cinstr->op[j]])) == 8) {
-                            out_msg("Syntax error", 0);
+                            out_msg("Syntax error, expected reg16", 0);
                         }
                         build_address(&addr);
                         k = 0;
@@ -450,7 +452,7 @@ int assemble(char* fname) {
                         j++;
                         get_address(&addr, param[cinstr->op[j + 1]]);
                         if((addr.reg = is_reg_seg(param[cinstr->op[j]])) == 8) {
-                            out_msg("Syntax error", 0);
+                            out_msg("Syntax error, expected segreg", 0);
                         }
                         build_address(&addr);
                         k = 0;
@@ -463,7 +465,7 @@ int assemble(char* fname) {
                         j++;
                         get_address(&addr, param[cinstr->op[j]]);
                         if((addr.reg = is_reg_seg(param[cinstr->op[j + 1]])) == 8) {
-                            out_msg("Syntax error", 0);
+                            out_msg("Syntax error, expected segreg", 0);
                         }
                         build_address(&addr);
                         k = 0;
@@ -513,7 +515,7 @@ int assemble(char* fname) {
             cinstr++;
         }
         if(!found) {
-            out_msg("Syntax error",0);
+            out_msg("Syntax error", 0);
         }
     }
 

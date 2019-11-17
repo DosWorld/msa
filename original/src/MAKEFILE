@@ -1,10 +1,12 @@
+all: msa2
+
 msa2: msa2.exe
 
 msa2w: msa2w.exe
 
 msa2w.exe: MSA.C TABLES.C ASSEMBLR.C MISC.C LEX.C MSA2.H LEX.H
-	i686-w64-mingw32-gcc -m32 -O3 MSA.C TABLES.C ASSEMBLR.C MISC.C LEX.C -o MSA2W.EXE
-	strip MSA2W.EXE
+	i686-w64-mingw32-gcc -m32 -O3 MSA.C TABLES.C ASSEMBLR.C MISC.C LEX.C -o ../BINW/MSA2W.EXE
+	strip ../BINW/MSA2W.EXE
 
 msa2.exe: msa.obj misc.obj assemblr.obj tables.obj lex.obj
 	wcl msa.obj tables.obj assemblr.obj misc.obj lex.obj -fe=msa2.exe -ms -ox -0
