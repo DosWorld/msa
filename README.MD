@@ -13,12 +13,12 @@ Initialy written by a 14-year old Swedish programmer Robert Ostling (in 2000-200
 in Borland C++ 2.0. Now, MSA2 is ported to Watcom C and GCC (and/or mingw).
 
 **MSA2** Consume to small piece of memory - i think, will be enougth just 128K.
-MSA2 does not rquire DPMI.
+MSA2 does not require DPMI.
 
 **MSA2** is pretty fast and the only file you'll need to build a program is
 MSA2.EXE (30 KB). It runs fine on my old 286.
 
-**MSA2W** - precompiled binary for win32. You can compile DOS programs in
+**MSA2** - has precompiled binary for DOS and win32. You can compile DOS programs in
 modern windows without DosBox.
 
 I had not test MSA2 in FreeDOS, Linux, windows yet, but there should not be any
