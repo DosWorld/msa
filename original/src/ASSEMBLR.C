@@ -100,9 +100,7 @@ int assemble(char* fname) {
     char tmp[64];
     char cf, stop, found;
     t_address addr;
-    int i, j, k, l, z, first_i, first_i2;
-    long int m;
-    word w;
+    int j, k, l, z, first_i, first_i2;
     t_constant *org_const, *ofs_const, *c;
     int lex1, lex2;
     t_instruction *cinstr;

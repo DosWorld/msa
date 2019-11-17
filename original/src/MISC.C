@@ -101,11 +101,11 @@ inline int is_reg(const char *s, const char *k, int badVal) {
     }
 
     i = 0;
-    while(r1 = *k) {
+    while((r1 = *k)) {
         k++;
         r2 = *k;
         k++;
-        if(c1 == r1 && c2 == r2) {
+        if((c1 == r1) && (c2 == r2)) {
             return i;
         }
         i++;
@@ -268,18 +268,18 @@ long int get_number(char* s) {
 
     if(c == 'X' && *s == '0') {
         s += 2;
-        while(c = *s) {
+        while((c = *s)) {
             value = (value << 4) | hexdigit(c);
             s++;
         }
     } else if(c == 'B' && *s == '0') {
         s += 2;
-        while(c = *s) {
+        while((c = *s)) {
             value = (value << 1) | bindigit(c);
             s++;
         }
     } else {
-        while(c = *s) {
+        while((c = *s)) {
             value = (value * 10) + decdigit(c);
             s++;
         }
@@ -288,7 +288,7 @@ long int get_number(char* s) {
 }
 
 long int get_const(const char* s) {
-    int i, j, hash;
+    int j;
     char tmp[32], sign;
     long value, x;
     t_constant *c;
@@ -351,10 +351,9 @@ long int get_const(const char* s) {
 }
 
 int get_address(t_address* a, char* s) {
-    int i = 0, j, k;
+    int i = 0, k;
     char c1;
     byte seg_pre;
-    word x;
 
     if((i = is_reg_8(s)) < 8) {
         a->rm = i;
@@ -374,7 +373,7 @@ int get_address(t_address* a, char* s) {
         return 1;
     }
     s++;
-    j = i = 0;
+    i = 0;
 
     if(s[2] == ':') {
         c1 = *s;
@@ -450,7 +449,6 @@ int get_address(t_address* a, char* s) {
 }
 
 void get_line(char* s) {
-    int i = 0;
     char cf = 0;
     char *os, *p;
 
@@ -496,7 +494,7 @@ void split(char* s) {
         s++;
     }
 
-    while(c = *s) {
+    while((c = *s)) {
         if(c == '\"' && cf == 0) {
             cf = 1;
             arg[args][wp++] = c;

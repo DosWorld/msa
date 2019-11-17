@@ -65,7 +65,7 @@ word entry_point;
 char entry_point_def = 0;
 
 char write_ovl_boot() {
-    int i;
+    size_t i;
 
     if(target != TARGET_OVL) {
         return 1;
@@ -95,7 +95,7 @@ char write_ovl_exports(FILE *o) {
     t_constant *c;
     t_ovl_export e;
 
-    if(target != TARGET_OVL && target != TARGET_TEXE || !pass) {
+    if((target != TARGET_OVL && target != TARGET_TEXE) || !pass) {
         return 1;
     }
 
@@ -161,20 +161,15 @@ char write_exe_header(FILE *o, word entry_point, word image_size, word bss_size)
     int block_count;
     int inlastblock;
 
-    if(target != TARGET_OVL && target != TARGET_TEXE || !pass) {
+    if((target != TARGET_OVL && target != TARGET_TEXE) || !pass) {
         return 1;
     }
 
-    if(target == TARGET_OVL) {
-        bss_par = bss_size & 0x0f !=0 ? (bss_size >> 4 + 1) : (bss_size >> 4);
-    }
+    bss_par = (bss_size >> 4) + (bss_size & 0x0f ? 1 : 0);
+
     if(target == TARGET_TEXE) {
         bss_par = -(image_size + bss_size);
-        if((bss_par & 0x0f) != 0) {
-            bss_par = bss_par >> 4 + 1;
-        } else {
-            bss_par = bss_par >> 4;
-        }
+        bss_par = (bss_size >> 4) + (bss_size & 0x0f ? 1 : 0);
     }
     bss_par &= 0x0fff;
 
