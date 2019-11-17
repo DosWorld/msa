@@ -157,9 +157,9 @@ void check_entry_point() {
 
 char write_exe_header(FILE *o, word entry_point, word image_size, word bss_size) {
     word exe_hdr[0x10];
-    int bss_par;
-    int block_count;
-    int inlastblock;
+    word bss_par;
+    word block_count;
+    word inlastblock;
 
     if((target != TARGET_OVL && target != TARGET_TEXE) || !pass) {
         return 1;
@@ -168,10 +168,10 @@ char write_exe_header(FILE *o, word entry_point, word image_size, word bss_size)
     bss_par = (bss_size >> 4) + (bss_size & 0x0f ? 1 : 0);
 
     if(target == TARGET_TEXE) {
-        bss_par = -(image_size + bss_size);
-        bss_par = (bss_size >> 4) + (bss_size & 0x0f ? 1 : 0);
+        bss_par = 0xffff - (image_size + bss_size);
+        bss_par = (bss_par >> 4) + (bss_par & 0x0f ? 1 : 0);
     }
-    bss_par &= 0x0fff;
+    // bss_par &= 0x0fff;
 
     inlastblock = image_size % 512;
     block_count = image_size / 512;
