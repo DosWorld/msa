@@ -1,10 +1,12 @@
 # MSA2 x86 assembler for real-mode DOS
-     ____    ____   ______        _        _____   
-    |_   \  /   _|.' ____ \      / \      / ___ `. 
-      |   \/   |  | (___ \_|    / _ \    |_/___) | 
-      | |\  /| |   _.____`.    / ___ \    .'____.' 
-     _| |_\/_| |_ | \____) | _/ /   \ \_ / /_____  
-    |_____||_____| \______.'|____| |____||_______| 
+
+     ooo        ooooo  .oooooo..o       .o.         .oooo.
+     `88.       .888' d8P'    `Y8      .888.      .dP""Y88b
+      888b     d'888  Y88bo.          .8"888.           ]8P'
+      8 Y88. .P  888   `"Y8888o.     .8' `888.        .d8P'
+      8  `888'   888       `"Y88b   .88ooo8888.     .dP'
+      8    Y     888  oo     .d8P  .8'     `888.  .oP     .o
+     o8o        o888o 8""88888P'  o88o     o8888o 8888888888
 
 MSA2 is a old and free x86 two-pass assembler for DOS targets. It supports all
 Intel 8086 instructions and most of the 80186/80286 instructions.
