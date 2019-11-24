@@ -3,7 +3,7 @@ all: msa2
 distcheck:
 
 
-checks:
+check:
 
 msa2: MSA.C TABLES.C ASSEMBLR.C MISC.C LEX.C MSA2.H LEX.H
 	gcc -O3 MSA.C TABLES.C ASSEMBLR.C MISC.C LEX.C -o msa2
