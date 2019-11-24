@@ -1,5 +1,8 @@
 all: msa2
 
+distcheck:
+
+
 checks:
 
 msa2: MSA.C TABLES.C ASSEMBLR.C MISC.C LEX.C MSA2.H LEX.H
