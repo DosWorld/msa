@@ -1,5 +1,4 @@
 # MSA2 x86 assembler for real-mode DOS
-[![MIT License][license-image]][license-url]
 
      ooo        ooooo  .oooooo..o       .o.         .oooo.
      `88.       .888' d8P'    `Y8      .888.      .dP""Y88b
