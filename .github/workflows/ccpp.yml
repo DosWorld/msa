@@ -10,8 +10,8 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: make
-      run: make
+      run: cd original/src; make -f MAKEFILE
     - name: make check
-      run: make check
+      run: cd original/src; make -f MAKEFILE check
     - name: make distcheck
-      run: make distcheck
+      run: cd original/src; make -f MAKEFILE distcheck
