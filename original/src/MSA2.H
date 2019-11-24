@@ -35,6 +35,8 @@ SOFTWARE.
 #define BUILD           14
 #define PROG_NAME       "MSA2"
 
+#define MAX_LABEL 32
+
 #define TARGET_UNDEF 0
 #define TARGET_BIN 1
 #define TARGET_COM 2
@@ -46,8 +48,6 @@ SOFTWARE.
 typedef uint8_t byte;
 typedef uint16_t word;
 typedef uint32_t dword;
-
-#define MAX_ARGS                0x0006
 
 #define IMM                     0X00
 #define REG_8                   0X01
@@ -100,10 +100,9 @@ typedef uint32_t dword;
 
 #define OVL_SYMTAB_MAGIK        0xFE33
 
-#define CONST_TEXT 1
-#define CONST_DATA 2
+#define CONST_LABEL 1
+#define CONST_EXPR 2
 #define CONST_BSS 3
-#define CONST_EXPR 4
 
 typedef struct {
     byte    mod;
@@ -130,6 +129,19 @@ typedef struct {
     int    op[10];
 } t_instruction;
 
+typedef struct {
+    dword lnum;
+    char has_label;
+    char pcount;
+    char has_lock;
+    int rep_type;
+    int lex2;
+    char label[MAX_LABEL];
+    char cmd[16];
+    char p1[4096];
+    char p2[4096];
+} t_line;
+
 #pragma pack(push)
 #pragma pack(1)
 typedef struct {
@@ -139,7 +151,7 @@ typedef struct {
 } t_ovl_export;
 #pragma pack(pop)
 
-extern t_instruction instructions[];
+extern t_instruction instr86[];
 
 extern int assemble(char* fname);
 extern void out_msg(const char* s,int x);
@@ -150,7 +162,6 @@ extern int is_reg_16(const char* s);
 extern int is_reg_seg(const char* s);
 
 extern int get_type(const char* s);
-extern void get_arg_types(const char* s);
 extern int hashCode(const char *str);
 extern long int get_number(char* s);
 extern int get_address(t_address* a, char* s);
@@ -160,16 +171,14 @@ extern void split(char* s);
 extern char err_msg[];
 extern int errors, warnings, outptr, voutptr, pass, passes, params;
 extern byte quiet;
-extern byte *outprog, param_type[4];
+extern byte *outprog;
 extern word out_max, org;
 extern FILE *outfile;
 extern long int linenr;
-extern char param[4][32];
+extern char *param[2];
+extern int param_type[2];
 extern word old_outptr;
-extern char prog[];
 extern word ptr;
-extern char arg[MAX_ARGS][256];
-extern int args;
 
 extern t_constant *constants;
 extern t_constant *add_const(const char* name, int type, long int value);
@@ -179,5 +188,8 @@ extern t_constant *find_const(const char *name);
 extern word entry_point;
 extern char entry_point_def;
 extern char *inputname;
+
+extern char strip_line(char *line);
+extern void split_line(t_line *cur, char *line, char *a1);
 
 #endif

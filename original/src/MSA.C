@@ -225,6 +225,7 @@ void help(int code) {
 
 int main(int argc, char* argv[]) {
     int i, assembleResult;
+    char c;
 
     if(argc < 2) {
         help(1);
@@ -233,7 +234,8 @@ int main(int argc, char* argv[]) {
     outname[0] = 0;
     linenr = 0;
     for(i = 1; i < argc; i++) {
-        if(argv[i][0]=='-') {
+        c = argv[i][0];
+        if(c == '-' || c == '/') {
             switch(toupper(argv[i][1])) {
             case 'F':
                 if(!strcasecmp(&argv[i][2],"bin")) {
@@ -332,6 +334,8 @@ int main(int argc, char* argv[]) {
             recalc_bss_labels(code_size);
         }
         write_ovl_exports(outfile);
+        fseek(outfile, 0, SEEK_SET);
+        write_exe_header(outfile, entry_point, code_size, bss_size);
         fclose(outfile);
     }
 

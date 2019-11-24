@@ -1,31 +1,19 @@
 all: msa2
 
-msa2: msa2.exe
+checks:
 
-msa2w: msa2w.exe
+msa2: MSA.C TABLES.C ASSEMBLR.C MISC.C LEX.C MSA2.H LEX.H
+	gcc -O3 MSA.C TABLES.C ASSEMBLR.C MISC.C LEX.C -o msa2
 
 msa2w.exe: MSA.C TABLES.C ASSEMBLR.C MISC.C LEX.C MSA2.H LEX.H
-	i686-w64-mingw32-gcc -m32 -O3 MSA.C TABLES.C ASSEMBLR.C MISC.C LEX.C -o ../BINW/MSA2.EXE
-	strip ../BINW/MSA2.EXE
+	i686-w64-mingw32-gcc -m32 -O3 MSA.C TABLES.C ASSEMBLR.C MISC.C LEX.C -o MSA2W.EXE
+	strip MSA2W.EXE
 
-msa2.exe: msa.obj misc.obj assemblr.obj tables.obj lex.obj
-	wcl msa.obj tables.obj assemblr.obj misc.obj lex.obj -fe=msa2.exe -ms -ox -0
+dos: msa2.exe
+
+msa2.exe: MSA.C TABLES.C ASSEMBLR.C MISC.C LEX.C MSA2.H LEX.H
+	wcl MSA.C TABLES.C ASSEMBLR.C LEX.C MISC.C -fe=msa2.exe -ms -ox -0
 	rem upx -9 --8086 msa2.exe
-
-msa.obj: msa.c msa2.h lex.h
-	wcc -ms msa.c -ox -0
-
-lex.obj: lex.c msa2.h lex.h
-	wcc lex.c -ms -ox -0
-
-tables.obj: tables.c msa2.h lex.h
-	wcc tables.c -ms -ox -0
-
-assemblr.obj: assemblr.c msa2.h lex.h
-	wcc assemblr.c -ms -ox -0
-
-misc.obj: misc.c msa2.h
-	wcc misc.c -ms -ox -0
 
 clean:
 	del msa2.exe
@@ -33,5 +21,6 @@ clean:
 	del *.err
 	del *.ori
 
-install: all
-	copy msa2.exe ..\bin\msa2.exe
+install:
+	copy MSA2.EXE ..\BIN\MSA2.EXE
+	copy MSA2W.EXE ..\BINW\MSA2W.EXE

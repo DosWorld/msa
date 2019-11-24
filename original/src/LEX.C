@@ -36,17 +36,28 @@ SOFTWARE.
 
 int lexId[192];
 int lexHash[192];
+int lexPreScan[192];
 const char *lexStr[192];
 int lexPtr;
 
 void addLex(int id, const char *str) {
+    int i;
     lexId[lexPtr] = id;
     lexStr[lexPtr] = str;
     lexHash[lexPtr] = hashCode(str);
+    lexPreScan[lexPtr] = i = 0;
+
+    while(instr86[i].lex1 != LEX_NONE) {
+        if(instr86[i].lex1 == id) {
+                lexPreScan[lexPtr] = i;
+                break;
+        }
+        i++;
+    }
     lexPtr++;
 }
 
-int lookupLex(const char *str) {
+int lookupLex(const char *str, int *prescan) {
     int i, hash;
 
     if(*str == 0) {
@@ -57,11 +68,13 @@ int lookupLex(const char *str) {
     for(i = 0; i < lexPtr; i++) {
         if(hash == lexHash[i]) {
             if(!strcmp(lexStr[i], str)) {
+                *prescan = lexPreScan[i];
                 return lexId[i];
             }
         }
     }
 
+    *prescan = 0;
     return LEX_NONE;
 }
 
@@ -97,10 +110,10 @@ void init_lex() {
     addLex(LEX_STOSW, "STOSW");
     addLex(LEX_MOVSB, "MOVSB");
     addLex(LEX_MOVSW, "MOVSW");
-    addLex(LEX_SCASB, "SCASB");
-    addLex(LEX_SCASW, "SCASW");
     addLex(LEX_LODSB, "LODSB");
     addLex(LEX_LODSW, "LODSW");
+    addLex(LEX_SCASB, "SCASB");
+    addLex(LEX_SCASW, "SCASW");
 
     addLex(LEX_POPA, "POPA");
     addLex(LEX_POPF, "POPF");
@@ -113,8 +126,6 @@ void init_lex() {
     addLex(LEX_CLD, "CLD");
     addLex(LEX_CLI, "CLI");
     addLex(LEX_ENTER, "ENTER");
-    addLex(LEX_INSB, "INSB");
-    addLex(LEX_INSW, "INSW");
     addLex(LEX_HALT, "HALT");
     addLex(LEX_INTO, "INTO");
     addLex(LEX_IRET, "IRET");
@@ -161,13 +172,21 @@ void init_lex() {
     addLex(LEX_LOOPNZ, "LOOPNZ");
     addLex(LEX_IN, "IN");
     addLex(LEX_OUT, "OUT");
+
     addLex(LEX_REP, "REP");
     addLex(LEX_REP, "REPE");
     addLex(LEX_REP, "REPZ");
-
     addLex(LEX_REPNZ, "REPNE");
     addLex(LEX_REPNZ, "REPNZ");
 
+    addLex(LEX_INT, "INT");
+
+    addLex(LEX_RET, "RET");
+    addLex(LEX_RET, "RETN");
+    addLex(LEX_RETF, "RETF");
+
+    addLex(LEX_INSB, "INSB");
+    addLex(LEX_INSW, "INSW");
     addLex(LEX_OUTSB, "OUTSB");
     addLex(LEX_OUTSW, "OUTSW");
     addLex(LEX_RCL1, "RCL1");
@@ -184,9 +203,7 @@ void init_lex() {
     addLex(LEX_SAL, "SAL");
     addLex(LEX_SAR1, "SAR1");
     addLex(LEX_SAR, "SAR");
-    addLex(LEX_RET, "RET");
-    addLex(LEX_RET, "RETN");
-    addLex(LEX_RETF, "RETF");
+
     addLex(LEX_SALC, "SALC");
     addLex(LEX_SBB, "SBB");
     addLex(LEX_SHL1, "SHL1");
@@ -196,7 +213,6 @@ void init_lex() {
     addLex(LEX_STC, "STC");
     addLex(LEX_STD, "STD");
     addLex(LEX_STI, "STI");
-    addLex(LEX_INT, "INT");
 
     addLex(LEX_AAA, "AAA");
     addLex(LEX_AAS, "AAS");
@@ -218,7 +234,6 @@ void init_lex() {
     addLex(LEX_ORG, "ORG");
     addLex(LEX_END, "END");
 
-    addLex(LEX_CONST, "CONST");
     addLex(LEX_EXPORT, "EXPORT");
 
     addLex(LEX_CS2DOT, "CS:");
@@ -229,6 +244,7 @@ void init_lex() {
     addLex(LEX_SHORT, "SHORT");
     addLex(LEX_NEAR, "NEAR");
     addLex(LEX_FAR, "FAR");
+    addLex(LEX_EQU, "EQU");
 }
 
 void done_lex() {

@@ -8,7 +8,7 @@
       8    Y     888  oo     .d8P  .8'     `888.  .oP     .o
      o8o        o888o 8""88888P'  o88o     o8888o 8888888888
 
-MSA2 is a old and free x86 two-pass assembler for DOS targets. It supports all
+**MSA2** is a old and free x86 two-pass assembler for DOS targets. It supports all
 Intel 8086 instructions and most of the 80186/80286 instructions.
 
 Initialy written by a 14-year old Swedish programmer Robert Ostling (in 2000-2001)
@@ -50,11 +50,11 @@ MSA2 could be compiled for DOS, Linux and windows with Open Watcom C, GCC, GCC/M
 
 To build DOS version with Watcom C, just type (in original/src/)
 
-    make
+    make dos
 
 or
 
-    wmake
+    wmake dos
 
 ### Linux
 

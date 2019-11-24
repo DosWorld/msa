@@ -33,6 +33,9 @@ SOFTWARE.
 #include <stdint.h>
 #include <ctype.h>
 #include "MSA2.H"
+#include "LEX.H"
+
+#define MSA_MALLOC(c) msa_malloc(c)
 
 t_constant *constants = NULL;
 
@@ -158,33 +161,6 @@ int get_type(const char* s) {
     return IMM;
 }
 
-void get_arg_types(const char* s) {
-    char tmp[64], *p;
-
-    params = 0;
-    while(*s) {
-        p = tmp;
-        while(*s <= ' ' && *s) {
-            s++;
-        }
-        while(*s != ',' && *s) {
-            *p = *s;
-            p++;
-            s++;
-        }
-        *p = 0;
-        while(*p <= ' ' && (p + 1 != tmp)) {
-            *p = 0;
-            p--;
-        }
-        strcpy(param[params], tmp);
-        param_type[params++] = get_type(tmp);
-        if(*s == ',') {
-            s++;
-        }
-    }
-}
-
 t_constant *add_const(const char* name, int type, long int value) {
     t_constant *c;
     int hash;
@@ -196,7 +172,7 @@ t_constant *add_const(const char* name, int type, long int value) {
         if(hash == c->hash) {
             if(!strcmp(c->name, name)) {
                 if(value != c->value) {
-                    if((!pass && type == CONST_TEXT) || (pass && type == CONST_EXPR)) {
+                    if((!pass && type == CONST_LABEL) || (pass && type == CONST_EXPR)) {
                         sprintf(err_msg, "Constant %s changed", name);
                         out_msg(err_msg, 2);
                     }
@@ -255,8 +231,8 @@ char inline decdigit(char c) {
 
 char inline hexdigit(char c) {
     if(c >= '0' && c <= '9') return c - '0';
-    if(c >= 'a' && c <= 'f') return c - 'a' + 10;
     if(c >= 'A' && c <= 'F') return c - 'A' + 10;
+    if(c >= 'a' && c <= 'f') return c - 'a' + 10;
     sprintf(err_msg, "Invalid hex digit %c", c);
     out_msg(err_msg, 0);
     return 0;
@@ -295,33 +271,39 @@ long int get_const(const char* s) {
 
     value = 0;
 
-    while(*s != 0) {
+    while(*s) {
         if(is_math(sign = *s)) {
             s++;
         } else {
             sign = '+';
         }
-        j = 0;
-        while(is_ident(*s)) {
-            tmp[j] = *s;
-            j++;
+        if(*s == '\'') {
             s++;
-        }
-        tmp[j] = 0;
-        x = 0;
-        if(tmp[0] == '\'') {
-            x = tmp[1];
-        } else if(is_numeric(tmp[0])) {
-            x = get_number(tmp);
+            x = *s;
+            s++;
+            s++;
         } else {
-            if((c = find_const(tmp)) != NULL) {
-                x = c->value;
+
+            j = 0;
+            while(is_ident(*s)) {
+                tmp[j] = *s;
+                j++;
+                s++;
+            }
+            tmp[j] = 0;
+            x = 0;
+            if(is_numeric(tmp[0])) {
+                x = get_number(tmp);
             } else {
-                if(pass) {
-                    sprintf(err_msg, "Undefined constant %s", tmp);
-                    out_msg(err_msg, 1);
+                if((c = find_const(tmp)) != NULL) {
+                    x = c->value;
+                } else {
+                    if(pass) {
+                        sprintf(err_msg, "Undefined constant '%s'", tmp);
+                        out_msg(err_msg, 1);
+                    }
+                    return 0x00;
                 }
-                return 0x00;
             }
         }
         switch(sign) {
@@ -427,7 +409,7 @@ int get_address(t_address* a, char* s) {
     } else {
         a->mod = 0;
         a->rm = 6;
-        s[strlen(s) - 1]=0;
+        s[strlen(s) - 1] = 0;
         a->disp = get_const(s);
         return 0;
     }
@@ -435,6 +417,7 @@ int get_address(t_address* a, char* s) {
     if(is_math(*s)) {
         s[strlen(s) - 1] = 0;
         a->disp = get_const(s);
+// HERE ??
         a->mod = a->disp < 0x80 ? 1 : 2;
     } else {
         a->mod = 0;
@@ -448,75 +431,274 @@ int get_address(t_address* a, char* s) {
     return 0;
 }
 
-void get_line(char* s) {
-    char cf = 0;
-    char *os, *p;
+inline char is_spc(char c) {
+    return c && (c <= ' ');
+}
 
-    os = s;
-    p = prog + ptr;
-    while(*p && *p <= ' ') {
+void *msa_malloc(word size) {
+    void *r = malloc(size);
+    if(r == NULL) {
+        printf("ERR: Could not allocate %i byte(s)\n", size);
+    }
+    return r;
+}
+
+char *get_param(char *dest, char *line) {
+    char c;
+    while((c = *line)) {
+        if(c == ',') {
+            break;
+        } else if(c == ' ') {
+            line++;
+        } else if(c == '\'' || c == '"') {
+            *dest = c;
+            dest++;
+            line++;
+            while((*line) && (*line != c)) {
+                *dest = *line;
+                dest++;
+                line++;
+            }
+            if(*line) {
+                *dest = *line;
+                dest++;
+                line++;
+            }
+        } else {
+            *dest = c;
+            dest++;
+            line++;
+        }
+    }
+    *dest = 0;
+    return line;
+}
+
+void split_line(t_line *cur, char *line, char *a1) {
+    char *p, *p2, c, c1, c2, c3, c4, c5;
+    char full_param;
+    p = line;
+    p2 = a1;
+
+    cur->p1[0] = 0;
+    cur->p2[0] = 0;
+    full_param = 0;
+    cur->lex2 = LEX_NONE;
+    while((c = *p)) {
+        if((c == ' ') || (c == ':')) {
+            break;
+        }
+        *p2 = c;
+        p++;
+        p2++;
+    }
+    *p2 = 0;
+    while((c = *p) && (c == ' ')) {
+        p++;
+    }
+    if(c == ':') {
+        strcpy(cur->label, a1);
+        cur->has_label = 1;
+        line = p + 1;
+    } else {
+        c1 = *p;
+        c2 = *(p+1);
+        c3 = *(p+2);
+        c4 = *(p+3);
+        if(c1 == 'E' && c2 == 'Q' && c3 == 'U' && c4 == ' ') {
+            strcpy(cur->label, a1);
+            full_param = 1;
+            line = p;
+        }
+    }
+    if(!*line) {
+        return;
+    }
+    while((c = *line) && (c == ' ')) {
+        line++;
+    }
+
+    c1 = line[0];
+    c2 = line[1];
+    c3 = line[2];
+    c4 = line[3];
+    c5 = line[4];
+
+    if((c1 == 'L' && c2 == 'O' && c3 == 'C' && c4 == 'K' && c5 == ' ')) {
+        cur->has_lock = 1;
+        line += 5;
+    }
+
+    c1 = line[0];
+    c2 = line[1];
+    c3 = line[2];
+    c4 = line[3];
+    c5 = line[4];
+
+    if((c1 == 'R' && c2 == 'E' && c3 == 'P')) {
+        if(c4 == ' ') {
+            cur->rep_type = LEX_REP;
+            line += 4;
+        } else if((c4 == 'Z' || c4 == 'E') && c5 == ' ') {
+            cur->rep_type = LEX_REP;
+            line += 5;
+        } else if((c4 == 'N') && (c5 == 'Z' || c5 == 'E')) {
+            cur->rep_type = LEX_REPNZ;
+            line += 6;
+        }
+    }
+
+    p = cur->cmd;
+    while((c = toupper(*line)) && (c > ' ')) {
+        *p = c;
+        line++;
         p++;
     }
 
-    while(*p) {
-        if(*p == '"') cf ^= 1;
-        if(*p == ';'&& !cf) {
-            *s = 0;
-            break;
-        }
-        else {
-            *s = *p;
-            s++;
-            p++;
+    *p = 0;
+
+    while((c = *line) && (c == ' ')) {
+        line++;
+    }
+
+    if(!*line) {
+        return;
+    }
+
+    if(!full_param) {
+        c1 = cur->cmd[0];
+        c2 = cur->cmd[1];
+        c3 = cur->cmd[2];
+        if((c3 == 0) && (c1 == 'R' || c1 == 'D')) {
+            if(c2 == 'B' || c2 == 'W' || c3 == 'D') {
+                full_param = 1;
+            }
         }
     }
-    ptr = p - prog;
-    *s = 0;
-    os--;
-    while(os != s && (*s <= ' ')) {
-        *s = 0;
-        s--;
+
+    if(full_param) {
+        p = cur->p1;
+        while((c = *line)) {
+            if(c == ' ') {
+                line++;
+            } else if(c == '\'' || c == '"') {
+                *p = c;
+                p++;
+                line++;
+                while((*line) && (*line != c)) {
+                    *p = *line;
+                    p++;
+                    line++;
+                }
+                if(*line) {
+                    *p = *line;
+                    p++;
+                    line++;
+                }
+            } else {
+                *p = c;
+                p++;
+                line++;
+            }
+        }
+        *p = 0;
+        cur->pcount = 1;
+        return;
+    }
+    if(!memcmp(line, "SHORT ", 6)) {
+        cur->lex2 = LEX_SHORT;
+        line += 6;
+    } else if(!memcmp(line, "NEAR ", 5)) {
+        cur->lex2 = LEX_NEAR;
+        line += 5;
+    } else if(!memcmp(line, "FAR ", 4)) {
+        cur->lex2 = LEX_FAR;
+        line += 4;
+    }
+
+    line = get_param(a1, line);
+    if(*a1 != 0) {
+        strcpy(cur->p1, a1);
+        cur->pcount++;
+    }
+    if(*line == ',') {
+        line++;
+        line = get_param(a1, line);
+        strcpy(cur->p2, a1);
+        cur->pcount++;
     }
 }
 
+char strip_line(char *line) {
+    char *line_b, *line_e, *p, *p2, c;
+    int error = 0;
 
-void split(char* s) {
-    char sf = 1, cf = 0, c;
-    int i, wp = 0;
-
-    for(i = 0; i < MAX_ARGS; i++) {
-        arg[i][0] = 0;
+    line_b = line;
+    while(is_spc(*line_b)) {
+        line_b++;
     }
-
-    args = 0;
-
-    while(*s <= ' ' && *s) {
-        s++;
-    }
-
-    while((c = *s)) {
-        if(c == '\"' && cf == 0) {
-            cf = 1;
-            arg[args][wp++] = c;
-        } else if(c == '\"' && cf == 1) {
-            arg[args][wp++] = '\"';
-            sf = cf = 0;
-        } else if(c != '\"' && cf == 1) {
-            arg[args][wp++] = c;
-        } else if(c <= ' ' && sf == 1) {
-        } else if(c != ' '&& sf == 1) {
-            sf = 0;
-            arg[args][wp++] = toupper(c);
-        } else if(c != ' ' && sf == 0) {
-            arg[args][wp++] = toupper(c);
-        } else if(c <= ' ' && sf == 0) {
-            sf = 1;
-            arg[args++][wp] = 0;
-            wp = 0;
+    line_e = line_b;
+    while((c = *line_e) && !error) {
+        if(c == '\'' || c == '"') {
+            line_e++;
+            while((*line_e) && (*line_e != c)) {
+                line_e++;
+            }
+            if(*line_e) {
+                line_e++;
+            } else {
+                error = 1;
+            }
+        } else if(c < ' ') {
+            *line_e = ' ';
+        } else if(c == ';') {
+            *line_e = 0;
+            break;
+        } else {
+            line_e++;
         }
-        s++;
     }
-    if(sf == 0 || cf == 1) {
-        arg[args++][wp] = 0;
+    if(error) {
+        return 0;
     }
+    p = line_b - 1;
+    while(p != line_e) {
+        if(*line_e > ' ') {
+            break;
+        }
+        *line_e = 0;
+        line_e--;
+    }
+    p = line;
+    p2 = line_b;
+    while((c = *p2)) {
+        if(c == '"' || c == '\'') {
+            *p = *p2;
+            p++;
+            p2++;
+            while((*p2) && (*p2 != c)) {
+                *p = *p2;
+                p++;
+                p2++;
+            }
+            if(*p2) {
+                *p = *p2;
+                p++;
+                p2++;
+            }
+        } else if(c == ' ') {
+            *p = *p2;
+            p++;
+            p2++;
+            while((c = *p2) && (c == ' ')) {
+                p2++;
+            }
+        } else {
+            *p = toupper(*p2);
+            p++;
+            p2++;
+        }
+    }
+    *p = 0;
+    return 1;
 }

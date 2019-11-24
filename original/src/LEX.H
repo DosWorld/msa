@@ -37,7 +37,7 @@ SOFTWARE.
 #define LEX_DD 102
 #define LEX_EXPORT 103
 #define LEX_ORG 104
-#define LEX_CONST 105
+#define LEX_EQU 105
 #define LEX_END 106
 
 #define LEX_SHORT 110
@@ -183,7 +183,7 @@ SOFTWARE.
 #define LEX_INT 3000
 #define LEX_JMP 3020
 
-extern int lookupLex(const char *);
+extern int lookupLex(const char *, int *);
 extern void init_lex();
 extern void done_lex();
 
