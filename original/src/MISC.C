@@ -23,7 +23,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-        Part of the MSA assembler
+        Part of the MSA2 assembler
 
 */
 
@@ -33,11 +33,8 @@ SOFTWARE.
 #include <stdint.h>
 #include <ctype.h>
 #include "MSA2.H"
+#include "EXPR.H"
 #include "LEX.H"
-
-#define MSA_MALLOC(c) msa_malloc(c)
-
-t_constant *constants = NULL;
 
 int hashCode(const char *str) {
     int result = 0;
@@ -49,27 +46,53 @@ int hashCode(const char *str) {
     return result;
 }
 
-
-inline char is_ident(char c) {
-    return (c>='0' && c<='9') || (c>='a' && c<='z') || (c>='A' && c<='Z') || c=='_' || c=='$' || c=='\'';
-}
-
 inline char is_numeric(char c) {
     return c >= '0' && c <= '9';
 }
 
-void out_msg(const char* s, int x) {
+inline char is_az(char c) {
+    return c >= 'A' && c <= 'Z';
+}
+
+inline char is_ident(char c) {
+    return is_numeric(c) || is_az(c) || c == '_' || c == '$' || c == '.';
+}
+
+inline char is_math(char c) {
+    return c == '+' || c == '-' || c == '*' || c == '/' || c == '%';
+}
+
+inline char is_spc(char c) {
+    return c && (c <= ' ');
+}
+
+void out_msg(const char *s, int x) {
     if(x == 0) {
         errors++;
     } else {
         warnings++;
     }
     if(quiet >= x) {
-        printf("%s:%s:%ld: %s\n", (x == 0 ? "ERROR" : "WARNING"), inputname, linenr, s);
+        printf("%s:%s:%ld: %s\n", (x == 0 ? "ERROR" : "WARN"), inputname, linenr, s);
     }
 }
 
-void build_address(t_address* a) {
+void out_msg_str(const char *s, int x, const char *param) {
+    sprintf(err_msg, s, param);
+    out_msg(err_msg, x);
+}
+
+void out_msg_chr(const char *s, int x, char c) {
+    sprintf(err_msg, s, c);
+    out_msg(err_msg, x);
+}
+
+void out_msg_int(const char *s, int x, int i) {
+    sprintf(err_msg, s, i);
+    out_msg(err_msg, x);
+}
+
+void build_address(t_address *a) {
     if(a->mod == 3) {
         a->op_len = 1;
         a->op[0] = (a->mod << 6) + (a->reg << 3) + a->rm;
@@ -90,10 +113,9 @@ void build_address(t_address* a) {
     }
 }
 
-inline int is_reg(const char *s, const char *k, int badVal) {
+char is_reg(const char *s, const char *k, char badVal) {
     int i;
-    char c1, c2;
-    char r1, r2;
+    char c1, c2, r1, r2;
 
     c1 = *s;
     s++;
@@ -116,43 +138,18 @@ inline int is_reg(const char *s, const char *k, int badVal) {
     return badVal;
 }
 
-int is_reg_8(const char* s) {
-    return is_reg(s, "ALCLDLBLAHCHDHBH", 8);
-}
-
-int is_reg_16(const char* s) {
-    return is_reg(s, "AXCXDXBXSPBPSIDI", 8);
-}
-
-int is_reg_seg(const char* s) {
-    char c1, c2;
-
-    c1 = *s;
-    s++;
-    c2 = *s;
-    s++;
-    if((c2 != 'S') || (*s != 0)) {
-        return 8;
-    }
-    switch(c1) {
-    case 'E':
-        return 0;
-    case 'C':
-        return 1;
-    case 'S':
-        return 2;
-    case 'D':
-        return 3;
-    }
-    return 8;
-}
-
 int get_type(const char* s) {
-    int i;
+    char i;
 
-    if((i = is_reg_8(s)) != 8) return ACC_8 + i;
-    if((i = is_reg_16(s)) != 8) return ACC_16 + i;
-    if((i = is_reg_seg(s)) != 8) return SEG + i;
+    i = is_reg(s, "ALCLDLBLAHCHDHBHAXCXDXBXSPBPSIDIESCSSSDS", 64);
+    if(i < 8) {
+        return ACC_8 + i;
+    } else if(i < 16) {
+        return ACC_16 + i - 8;
+    } else if(i != 64) {
+        return SEG + i - 16;
+    }
+
     if(s[4] == '[') {
         if(!memcmp(s,"BYTE[", 5)) return MEM_8;
         if(!memcmp(s,"WORD[", 5)) return MEM_16;
@@ -161,112 +158,94 @@ int get_type(const char* s) {
     return IMM;
 }
 
-t_constant *add_const(const char* name, int type, long int value) {
-    t_constant *c;
-    int hash;
-
-    c = constants;
-    hash = hashCode(name);
-
-    while(c != NULL) {
-        if(hash == c->hash) {
-            if(!strcmp(c->name, name)) {
-                if(value != c->value) {
-                    if((!pass && type == CONST_LABEL) || (pass && type == CONST_EXPR)) {
-                        sprintf(err_msg, "Constant %s changed", name);
-                        out_msg(err_msg, 2);
-                    }
-                }
-                c->value = value;
-                c->type = type;
-                return c;
-            }
-        }
-        c = (t_constant *)c->next;
-    }
-    c = (t_constant *)malloc(sizeof(t_constant));
-    strcpy(c->name, name);
-    c->value = value;
-    c->hash = hash;
-    c->type = type;
-    c->is_export = 0;
-    c->next = constants;
-    return constants = c;
-}
-
-t_constant *find_const(const char *name) {
-    t_constant *c;
-    int hash;
-
-    c = constants;
-    hash = hashCode(name);
-    while(c != NULL) {
-        if(hash == c->hash) {
-            if(!strcmp(c->name, name)) {
-                break;
-            }
-        }
-        c = (t_constant *)c->next;
-    }
-    return c;
-}
-
-inline char is_math(char c) {
-    return c == '+' || c == '-' || c == '*' || c == '/' || c == '%';
-}
-
 char inline bindigit(char c) {
     if(c == '0' || c == '1') return c - '0';
-    sprintf(err_msg, "Invalid binary digit %c", c);
-    out_msg(err_msg, 0);
+    out_msg_chr("Invalid binary digit %c", 0, c);
     return 0;
 }
 
 char inline decdigit(char c) {
     if(c >= '0' || c <= '9') return c - '0';
-    sprintf(err_msg, "Invalid decimal digit %c", c);
-    out_msg(err_msg, 0);
+    out_msg_chr("Invalid decimal digit %c", 0, c);
     return 0;
 }
 
 char inline hexdigit(char c) {
     if(c >= '0' && c <= '9') return c - '0';
     if(c >= 'A' && c <= 'F') return c - 'A' + 10;
-    if(c >= 'a' && c <= 'f') return c - 'a' + 10;
-    sprintf(err_msg, "Invalid hex digit %c", c);
-    out_msg(err_msg, 0);
+    out_msg_chr("Invalid hex digit %c", 0, c);
     return 0;
 }
 
-long int get_number(char* s) {
-    long int value = 0;
+char inline is_hex(char c) {
+    if(c >= '0' && c <= '9') return 1;
+    if(c >= 'A' && c <= 'F') return 1;
+    return 0;
+}
+
+char *get_dword(char *s, long int *value) {
     char c = s[1];
 
+    *value = 0;
     if(c == 'X' && *s == '0') {
         s += 2;
-        while((c = *s)) {
-            value = (value << 4) | hexdigit(c);
+        while(is_hex(c = *s)) {
+            *value = ((*value) << 4) | hexdigit(c);
             s++;
         }
     } else if(c == 'B' && *s == '0') {
         s += 2;
-        while((c = *s)) {
-            value = (value << 1) | bindigit(c);
+        c = *s;
+        while(c == '0' || c == '1') {
+            *value = ((*value) << 1) | (c - '0');
             s++;
+            c = *s;
         }
     } else {
-        while((c = *s)) {
-            value = (value * 10) + decdigit(c);
+        c = *s;
+        while(c >= '0' && c <= '9') {
+            *value = ((*value) * 10) + (c - '0');
             s++;
+            c = *s;
         }
+    }
+    return s;
+}
+
+int get_number(char* s) {
+    char c1, c2;
+    int value = 0;
+
+    c1 = s[0];
+    c2 = s[1];
+    if(c1 == '0') {
+        if(c2 == 'X') {
+            s += 2;
+            while((c1 = *s)) {
+                value = (value << 4) | hexdigit(c1);
+                s++;
+            }
+            return value;
+        } else if(c2 == 'B') {
+            s += 2;
+            while((c1 = *s)) {
+                value = (value << 1) | bindigit(c1);
+                s++;
+            }
+            return value;
+        }
+    }
+    while((c1 = *s)) {
+        value = (value * 10) + decdigit(c1);
+        s++;
     }
     return value;
 }
 
-long int get_const(const char* s) {
+int get_const(const char* s) {
     int j;
     char tmp[32], sign;
-    long value, x;
+    int value, x;
     t_constant *c;
 
     value = 0;
@@ -283,7 +262,6 @@ long int get_const(const char* s) {
             s++;
             s++;
         } else {
-
             j = 0;
             while(is_ident(*s)) {
                 tmp[j] = *s;
@@ -299,8 +277,7 @@ long int get_const(const char* s) {
                     x = c->value;
                 } else {
                     if(pass) {
-                        sprintf(err_msg, "Undefined constant '%s'", tmp);
-                        out_msg(err_msg, 1);
+                        out_msg_str("Undefined constant '%s'", 1, tmp);
                     }
                     return 0x00;
                 }
@@ -323,8 +300,7 @@ long int get_const(const char* s) {
             value = value % x;
             break;
         default:
-            sprintf(err_msg, "Unknown math operation %c", sign);
-            out_msg(err_msg, 2);
+            out_msg_chr("Unknown math operation '%c'", 0, sign);
             break;
         }
     }
@@ -332,29 +308,34 @@ long int get_const(const char* s) {
     return value;
 }
 
-int get_address(t_address* a, char* s) {
-    int i = 0, k;
-    char c1;
-    byte seg_pre;
-
-    if((i = is_reg_8(s)) < 8) {
-        a->rm = i;
-        a->mod = 3;
-        return 0;
-    } else if((i = is_reg_16(s)) < 8) {
-        a->rm = i;
-        a->mod = 3;
-        return 0;
-    }
-
-    while(*s != '[' && *s) {
+inline char *skip_until(char *s, char c) {
+    while((*s != c) && *s) {
         s++;
     }
+    if(*s) {
+        s++;
+    }
+    return s;
+}
+
+int get_address(t_address* a, char* s) {
+    int i = 0, k;
+    char c1, j1, j2;
+    byte seg_pre;
+
+    i = is_reg(s, "ALCLDLBLAHCHDHBHAXCXDXBXSPBPSIDI", 255);
+
+    if(i < 16) {
+        a->rm = i < 8 ? i : i - 8;
+        a->mod = 3;
+        return 0;
+    }
+
+    s = skip_until(s, '[');
 
     if(*s == 0) {
         return 1;
     }
-    s++;
     i = 0;
 
     if(s[2] == ':') {
@@ -374,6 +355,7 @@ int get_address(t_address* a, char* s) {
             out_msg("Syntax error in segment register name", 0);
             seg_pre = 0x90;
         }
+
         for(k = old_outptr + 4; k > old_outptr; k--) {
             outprog[k] = outprog[k-1];
         }
@@ -382,6 +364,8 @@ int get_address(t_address* a, char* s) {
         outptr++;
     }
     c1 = s[2] == '+';
+    j1 = *s;
+    j2 = *(s + 1);
     if(c1 && !memcmp(s, "BX+SI", 5)) {
         a->rm = 0;
         s += 5;
@@ -394,16 +378,16 @@ int get_address(t_address* a, char* s) {
     } else if(c1 && !memcmp(s, "BP+DI", 5)) {
         a->rm = 3;
         s += 5;
-    } else if(!memcmp(s, "SI", 2)) {
+    } else if(j1 == 'S' && j2 == 'I') {
         a->rm = 4;
         s += 2;
-    } else if(!memcmp(s, "DI", 2)) {
+    } else if(j1 == 'D' && j2 == 'I') {
         a->rm = 5;
         s += 2;
-    } else if(!memcmp(s, "BP", 2)) {
+    } else if(j1 == 'B' && j2 == 'P') {
         a->rm = 6;
         s += 2;
-    } else if(!memcmp(s, "BX", 2)) {
+    } else if(j1 == 'B' && j2 == 'X') {
         a->rm = 7;
         s += 2;
     } else {
@@ -423,7 +407,7 @@ int get_address(t_address* a, char* s) {
         a->mod = 0;
     }
 
-    if(a->rm == 6 && a->mod == 0) {
+    if((a->rm == 6) && (a->mod == 0)) {
         a->disp = 0;
         a->mod = 1;
     }
@@ -431,14 +415,11 @@ int get_address(t_address* a, char* s) {
     return 0;
 }
 
-inline char is_spc(char c) {
-    return c && (c <= ' ');
-}
-
-void *msa_malloc(word size) {
-    void *r = malloc(size);
-    if(r == NULL) {
-        printf("ERR: Could not allocate %i byte(s)\n", size);
+void *msa_malloc(size_t s) {
+    void *r;
+    if((r = malloc(s)) == NULL) {
+        out_msg("Could not allocate memory", 0);
+        done(4);
     }
     return r;
 }
@@ -641,12 +622,8 @@ char strip_line(char *line) {
     while((c = *line_e) && !error) {
         if(c == '\'' || c == '"') {
             line_e++;
-            while((*line_e) && (*line_e != c)) {
-                line_e++;
-            }
-            if(*line_e) {
-                line_e++;
-            } else {
+            line_e = skip_until(line_e, c);
+            if(!*line_e) {
                 error = 1;
             }
         } else if(c < ' ') {

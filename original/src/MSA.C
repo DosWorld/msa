@@ -23,7 +23,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-        Part of the MSA assembler
+        Part of the MSA2 assembler
 
 */
 
@@ -33,21 +33,21 @@ SOFTWARE.
 #include <stdint.h>
 #include <ctype.h>
 #include "MSA2.H"
+#include "EXPR.H"
 #include "LEX.H"
 
 unsigned char ovlboot[] = { 0x0E, 0x1F, 0xBA, 0x0D, 0x00, 0xB4, 0x09, 0xCD, 0x21, 0xB4, 0x4C, 0xCD, 0x21, 0x54, 0x68, 0x69,
-                   0x73, 0x20, 0x69, 0x73, 0x20, 0x6F, 0x76, 0x65, 0x72, 0x6C, 0x61, 0x79, 0x20, 0x66, 0x69, 0x6C,
-                   0x65, 0x2E, 0x0D, 0x0A, 0x24
-                 };
+                            0x73, 0x20, 0x69, 0x73, 0x20, 0x6F, 0x76, 0x65, 0x72, 0x6C, 0x61, 0x79, 0x20, 0x66, 0x69, 0x6C,
+                            0x65, 0x2E, 0x0D, 0x0A, 0x24
+                          };
 
 char err_msg[512];
 char outname[256];
 char *inputname = NULL;
 FILE* outfile;
 int target;
-int outptr;
-int voutptr = 0;
 byte* outprog;
+word outptr;
 
 int errors, warnings;
 
@@ -56,8 +56,8 @@ byte quiet = 1;
 int pass;
 int passes = 2;
 
-word org = 0x100;
-word out_max = 0x1000;
+word org = 0x0100;
+char is_org_def;
 
 word code_size;
 word bss_size;
@@ -83,7 +83,7 @@ void recalc_bss_labels(int code_size) {
 
     c = constants;
     while(c != NULL) {
-        if(c->type == CONST_BSS) {
+        if(CONST_TYPE(c) == CONST_BSS) {
             c->value += code_size;
         }
         c = (t_constant *)c->next;
@@ -138,18 +138,17 @@ void check_entry_point() {
         break;
     case TARGET_COM:
         if(entry_point != 0x0100) {
-            sprintf(err_msg, "Invalid entry point 0x%04X for .COM-file.", entry_point);
-            out_msg(err_msg, 0);
+            out_msg_int("Invalid entry point 0x%04X for .COM-file.", 0, entry_point);
         }
         break;
     case TARGET_OVL:
         if(entry_point != 0 || entry_point_def) {
-            out_msg("Overlay can't have entry point.\n", 0);
+            out_msg("Overlay can't have entry point", 0);
         }
         break;
     case TARGET_TEXE:
         if(!entry_point_def) {
-            out_msg("No entry point for .exe file.\n", 0);
+            out_msg("No entry point for .exe file", 0);
         }
         break;
     }
@@ -161,7 +160,7 @@ char write_exe_header(FILE *o, word entry_point, word image_size, word bss_size)
     word block_count;
     word inlastblock;
 
-    if((target != TARGET_OVL && target != TARGET_TEXE) || !pass) {
+    if(target != TARGET_OVL && target != TARGET_TEXE) {
         return 1;
     }
 
@@ -193,18 +192,14 @@ char write_exe_header(FILE *o, word entry_point, word image_size, word bss_size)
 }
 
 void done(int code) {
-    t_constant *c;
 
-    while(constants != NULL) {
-        c = (t_constant *)constants->next;
-        free(constants);
-        constants = c;
-    }
-
-    done_lex();
+    lex_done();
     if(code != 0) {
         remove(outname);
     }
+
+    free(outprog);
+    expr_done();
     exit(code);
 }
 
@@ -212,10 +207,10 @@ void help(int code) {
     printf("%s assembler Version %d.%d (build %d)\nCopyright(C) 2000, 2001, 2019 Robert Ostling\nCopyright(C) 2019 DosWorld\nMIT License https://opensource.org/licenses/MIT\n\n",PROG_NAME,MAIN_VERSION,SUB_VERSION,BUILD);
     printf("%s file.asm -ofile.com [-options]\n\n"
            "options:\n"
-           "\t-sxxxx   set starting point to xxxx (default 0x100)\n"
-           "\t-bxxxx   set buffer size to xxxx (default 0x1000 / 4K)\n"
-           "\t-mx      set error/waning level (default 2)\n"
-           "\t-fxxx    set output format bin, com, texe, ovl (default com)\n\n"
+           "\t-s xxxx     set starting point to xxxx (default 0x100)\n"
+           "\t-m x        set error/waning level (default 2)\n"
+           "\t-f xxx      set output format bin, com, texe, ovl (default com)\n"
+           "\t-dCONST=VAL set assign VAL to CONST\n\n"
            "Error/Warning levels:\n\n"
            "\t0\tErrors only\n"
            "\t1\tErrors and serious warnings\n"
@@ -224,54 +219,87 @@ void help(int code) {
 }
 
 int main(int argc, char* argv[]) {
-    int i, assembleResult;
-    char c;
+    int i, j, assembleResult;
+    char c, *p;
+    char tmp[256];
 
     if(argc < 2) {
         help(1);
     }
+
+    expr_init();
+
     target = TARGET_UNDEF;
     outname[0] = 0;
     linenr = 0;
+    outprog = (byte *)MSA_MALLOC(65000);
+                    outptr = org = 0;
+    is_org_def = 0;
+
     for(i = 1; i < argc; i++) {
         c = argv[i][0];
-        if(c == '-' || c == '/') {
+        if((c == '-' || c == '/') && (i + 1 < argc)) {
             switch(toupper(argv[i][1])) {
             case 'F':
-                if(!strcasecmp(&argv[i][2],"bin")) {
+                if(!strcasecmp(argv[i + 1],"bin")) {
                     target = TARGET_BIN;
-                } else if(!strcasecmp(&argv[i][2],"com")) {
+                    i++;
+                } else if(!strcasecmp(argv[i + 1],"com")) {
                     target = TARGET_COM;
-                    org = 0x100;
-                    entry_point = 0x100;
+                    entry_point = outptr = org = 0x100;
                     entry_point_def = 1;
-                } else if(!strcasecmp(&argv[i][2],"texe")) {
+                    is_org_def = 1;
+                    i++;
+                } else if(!strcasecmp(argv[i + 1],"texe")) {
                     target = TARGET_TEXE;
-                    entry_point = 0;
+                    entry_point = outptr = org = 0;
                     entry_point_def = 0;
-                } else if(!strcasecmp(&argv[i][2],"ovl")) {
+                    is_org_def = 1;
+                    i++;
+                } else if(!strcasecmp(argv[i + 1],"ovl")) {
                     target = TARGET_OVL;
-                    entry_point = 0;
+                    entry_point = outptr = org = 0;
                     entry_point_def = 0;
+                    org = 0;
+                    is_org_def = 1;
+                    i++;
                 } else {
                     help(1);
                 }
                 break;
             case 'O':
-                strcpy(outname,&argv[i][2]);
+                strcpy(outname, argv[i + 1]);
+                i++;
                 break;
             case 'S':
-                org = get_const(&argv[i][2]);
-                break;
-            case 'B':
-                out_max = get_const(&argv[i][2]);
+                org = get_const(argv[i + 1]);
+                i++;
                 break;
             case 'M':
-                quiet = get_const(&argv[i][2]);
+                quiet = get_const(argv[i + 1]);
+                i++;
                 break;
             default:
                 help(1);
-            };
+            }
+        } else if((c == '-' || c == '/')) {
+            switch(toupper(argv[i][1])) {
+            case 'D':
+                p = argv[i] + 2;
+                j = 0;
+                while((*p) && (*p != '=') && (j < (sizeof(tmp) - 1))) {
+                    tmp[j] = *p;
+                    p++;
+                    j++;
+                }
+                tmp[j] = 0;
+                if(*p != '=') help(1);
+                strupr(tmp);
+                add_const(tmp, CONST_EXPR, get_const(p));
+                break;
+            default:
+                help(1);
+            }
         } else {
             if(inputname != NULL) {
                 help(1);
@@ -285,35 +313,32 @@ int main(int argc, char* argv[]) {
         done(1);
     }
 
-    if((outprog = (byte *)malloc(out_max)) == NULL) {
-        out_msg("Out of memory.", 0);
-        done(1);
-    }
-
     if(target == TARGET_UNDEF) {
         target = TARGET_COM;
-        org = 0x100;
+                    outptr = org = 0x100;
         entry_point = 0x100;
         entry_point_def = 1;
+        is_org_def = 1;
     }
 
     switch(target) {
     case TARGET_COM:
-        org = 0x0100;
+        outptr = org = 0x0100;
         break;
     case TARGET_TEXE:
+        outptr = org = 0;
     case TARGET_OVL:
-        org = 0x0000;
+        outptr = org = 0x0000;
         break;
     }
 
-    init_lex();
+    lex_init();
     bss_size = 0;
     assembleResult = 1;
     code_size = 0;
 
-    add_const("$", CONST_EXPR, 0);
-    add_const("$$", CONST_EXPR, 0);
+    add_const("$", CONST_EXPR, outptr);
+    add_const("$$", CONST_EXPR, org);
 
     for(pass = 0; pass < passes && assembleResult; pass++) {
         if((outfile = fopen(outname,"wb"))==0) {
@@ -322,14 +347,13 @@ int main(int argc, char* argv[]) {
         }
         check_entry_point();
         write_exe_header(outfile, entry_point, code_size, bss_size);
-        outptr = 0;
-        voutptr = 0;
+        outptr = org;
         errors = 0;
         warnings = 0;
         write_ovl_boot();
         assembleResult = assemble(inputname);
-        code_size = voutptr + outptr;
-        fwrite(outprog, outptr, 1, outfile);
+        code_size = outptr - org;
+        fwrite(outprog + org, 1, code_size, outfile);
         if(!pass) {
             recalc_bss_labels(code_size);
         }
@@ -338,8 +362,6 @@ int main(int argc, char* argv[]) {
         write_exe_header(outfile, entry_point, code_size, bss_size);
         fclose(outfile);
     }
-
-    free(outprog);
 
     if(errors > 0) {
         done(2);

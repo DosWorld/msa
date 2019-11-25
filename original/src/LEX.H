@@ -2,7 +2,6 @@
 
 MIT License
 
-Copyright (c) 2000, 2001, 2019 Robert Ostling
 Copyright (c) 2019 DosWorld
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,7 +22,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-        Part of the MSA assembler
+        Part of the MSA2 assembler
 
 */
 
@@ -184,7 +183,7 @@ SOFTWARE.
 #define LEX_JMP 3020
 
 extern int lookupLex(const char *, int *);
-extern void init_lex();
-extern void done_lex();
+extern void lex_init();
+extern void lex_done();
 
 #endif

@@ -2,7 +2,6 @@
 
 MIT License
 
-Copyright (c) 2000, 2001, 2019 Robert Ostling
 Copyright (c) 2019 DosWorld
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,7 +22,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-        Part of the MSA assembler
+        Part of the MSA2 assembler
 
 */
 
@@ -78,7 +77,7 @@ int lookupLex(const char *str, int *prescan) {
     return LEX_NONE;
 }
 
-void init_lex() {
+void lex_init() {
     lexPtr = 0;
 
     addLex(LEX_MOV, "MOV");
@@ -247,5 +246,5 @@ void init_lex() {
     addLex(LEX_EQU, "EQU");
 }
 
-void done_lex() {
+void lex_done() {
 }

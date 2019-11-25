@@ -34,7 +34,9 @@
 
 START:
                 PUSH    CS
+                PUSH    CS
                 POP     DS
+                POP     ES
 
                 MOV     AX,0X13
                 INT     0X10

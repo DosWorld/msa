@@ -1,4 +1,12 @@
 
+        News in version 1.0.14:
+
+        * Complete rewriten lexer
+
+        News in version 1.0.13:
+
+        * Increased speed x2/x4 times
+
         News in version 1.0.12:
 
         00:03 14 Jan 2001

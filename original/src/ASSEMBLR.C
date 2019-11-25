@@ -23,7 +23,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-        Part of the MSA assembler
+        Part of the MSA2 assembler
 
 */
 
@@ -33,6 +33,7 @@ SOFTWARE.
 #include <string.h>
 #include "MSA2.H"
 #include "LEX.H"
+#include "EXPR.H"
 
 long int fsize;
 long int linenr;
@@ -200,13 +201,13 @@ inline void do_instruction(t_instruction *cinstr) {
             j++;
             break;
         case OP_CMD_REL8:
-            if(abs(z = get_const(param[op1]) - (outptr + org + 1)) > 127 && pass) {
+            if(abs(z = get_const(param[op1]) - (outptr + 1)) > 127 && pass) {
                 out_msg("Too long jump", 1);
             }
             outprog[outptr++] = z & 0xff;
             break;
         case OP_CMD_REL16:
-            out_word(get_const(param[op1])-(outptr + org + 2));
+            out_word(get_const(param[op1])-(outptr + 2));
             break;
         }
         j += 2;
@@ -220,6 +221,7 @@ int assemble(char* fname) {
     char cf, stop, found;
     int j, l, prescan;
     t_constant *org_const, *ofs_const, *c;
+    long int lvalue;
     int lex1, lex2;
     t_instruction *cinstr;
 
@@ -235,33 +237,23 @@ int assemble(char* fname) {
     ofs_const = find_const("$");
     org_const = find_const("$$");
 
-    cur = (t_line *)malloc(sizeof(t_line));
-    line = (char *)malloc(4096);
-    a1 = (char *)malloc(4096);
+    cur = (t_line *)MSA_MALLOC(sizeof(t_line));
+    line = (char *)MSA_MALLOC(4096);
+    a1 = (char *)MSA_MALLOC(4096);
     param[0] = cur->p1;
     param[1] = cur->p2;
 
     while(fgets(line, 4095, infile) && (!stop)) {
-
         linenr++;
         strip_line(line);
 
         memset(cur, 0, sizeof(t_line));
         split_line(cur, line, a1);
 
-        ofs_const->value = voutptr + outptr + org;
-
-        if(outptr >= out_max - 256) {
-            voutptr += outptr;
-            if(pass == passes - 1) {
-                fwrite(outprog, outptr, 1, outfile);
-            }
-            outptr = 0;
-        }
-
+        ofs_const->value = outptr;
 
         if(cur->has_label) {
-            add_const(cur->label, CONST_LABEL, voutptr + outptr + org);
+            add_const(cur->label, CONST_LABEL, outptr);
         }
 
         if(cur->has_lock) {
@@ -287,22 +279,15 @@ int assemble(char* fname) {
 
         switch(lex1) {
         case LEX_DD:
-            l = 0;
-            j = strlen(cur->p1);
             p = cur->p1;
             while(*p) {
+                p = get_dword(p, &lvalue);
+                out_long(lvalue);
                 if(*p ==  ',') {
-                    a1[l] = 0;
-                    out_long(get_const(a1));
-                    l = 0;
+                    p++;
                 } else {
-                    a1[l++] = *p;
+                    break;
                 }
-                p++;
-            }
-            a1[l] = 0;
-            if(l != 0) {
-                out_long(get_const(a1));
             }
             break;
         case LEX_DW:
@@ -369,8 +354,12 @@ int assemble(char* fname) {
             }
             break;
         case LEX_ORG:
-            org = get_const(cur->p1);
-            org_const->value = org;
+            if(is_org_def) {
+                out_msg("Org already defined and could not be changed", 0);
+            } else {
+                outptr = org = get_const(cur->p1);
+                org_const->value = org;
+            }
             break;
         case LEX_END:
             entry_point = get_const(cur->p1);
@@ -385,7 +374,6 @@ int assemble(char* fname) {
             stop = 1;
             break;
         default:
-
             old_outptr = outptr;
 
             cinstr = &instr86[prescan];

@@ -49,9 +49,8 @@ MINSKNING       EQU     0X08
 RAKETFARG       EQU     0XFD
 FARGER          EQU     3
 
-                ORG     0X0100
-PUSH CS
-POP DS
+                PUSH CS
+                POP DS
                 CALL    INIT8
 
                 MOV     AX,0X13

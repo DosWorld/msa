@@ -23,7 +23,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-        Part of the MSA assembler
+        Part of the MSA2 assembler
 
 */
 
@@ -44,6 +44,8 @@ SOFTWARE.
 #define TARGET_OVL 100
 
 #define EXPORT_NAME_LENGTH 32
+
+#define MSA_MALLOC(x) msa_malloc(x)
 
 typedef uint8_t byte;
 typedef uint16_t word;
@@ -103,6 +105,11 @@ typedef uint32_t dword;
 #define CONST_LABEL 1
 #define CONST_EXPR 2
 #define CONST_BSS 3
+#define CONST_UNDEF 0x80
+
+#define IS_CONST_UNDEF(x) (((x)->type & CONST_UNDEF) != 0)
+#define IS_CONST_DEF(x) (((x)->type & CONST_UNDEF) == 0)
+#define CONST_TYPE(x) ((x)->type & 0x7f)
 
 typedef struct {
     byte    mod;
@@ -118,7 +125,7 @@ typedef struct {
     char is_export;
     int hash;
     char type;
-    long int value;
+    int value;
     void *next;
 } t_constant;
 
@@ -154,25 +161,28 @@ typedef struct {
 extern t_instruction instr86[];
 
 extern int assemble(char* fname);
-extern void out_msg(const char* s,int x);
-extern void build_address(t_address* a);
 
-extern int is_reg_8(const char* s);
-extern int is_reg_16(const char* s);
-extern int is_reg_seg(const char* s);
+extern void out_msg(const char *s, int x);
+extern void out_msg_str(const char *s, int x, const char *param);
+extern void out_msg_chr(const char *s, int x, char c);
+extern void out_msg_int(const char *s, int x, int i);
+
+extern void build_address(t_address* a);
 
 extern int get_type(const char* s);
 extern int hashCode(const char *str);
-extern long int get_number(char* s);
+extern int get_number(char* s);
 extern int get_address(t_address* a, char* s);
 extern void get_line(char* s);
 extern void split(char* s);
 
 extern char err_msg[];
-extern int errors, warnings, outptr, voutptr, pass, passes, params;
+extern int errors, warnings, pass, passes, params;
+extern word outptr;
 extern byte quiet;
 extern byte *outprog;
-extern word out_max, org;
+extern word org;
+extern char is_org_def;
 extern FILE *outfile;
 extern long int linenr;
 extern char *param[2];
@@ -180,10 +190,8 @@ extern int param_type[2];
 extern word old_outptr;
 extern word ptr;
 
-extern t_constant *constants;
-extern t_constant *add_const(const char* name, int type, long int value);
-extern long int get_const(const char* s);
-extern t_constant *find_const(const char *name);
+extern int get_const(const char *s);
+extern char *get_dword(char *s, long int *x);
 
 extern word entry_point;
 extern char entry_point_def;
@@ -191,5 +199,8 @@ extern char *inputname;
 
 extern char strip_line(char *line);
 extern void split_line(t_line *cur, char *line, char *a1);
+
+extern void *msa_malloc(size_t size);
+extern void done(int c);
 
 #endif

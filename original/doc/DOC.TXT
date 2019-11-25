@@ -1,11 +1,10 @@
 
 
-                MSA2 1.0 (BUILD 13)
+                MSA2 1.0 (BUILD 14)
                 -=-=-=-=-=-=-=-=-=-
         Copyright(C) 2000 - 2019 Robert Ostling (robost86@hotmail.com)
         Copyright(C) 2019 DosWord (dosworld@tutanota.com)
                 -=-=-=-=-=-=-=-=-=-
-
 
 
                 Copyright
@@ -40,7 +39,7 @@
         why my english isn't very good)-:
 
         MSA2 is pretty fast, and the only file you'll need to build
-        a program is MSA2.EXE (35 KB). It runs fine on my old 286.
+        a program is MSA2.EXE (50 KB). It runs fine on my old 286.
         MSA2 does not require DPMI.
 
         I wrote MSA2 in C, using Borland C++ 2.0, but I don't think
@@ -82,12 +81,11 @@
         command-line options are case insensitive, like the rest of
         MSA2.
 
-
         =============================================================
 
                 -o              - Set output file
 
-        Use: -ofile.com, -odisk.bin
+        Use: -o file.com, -o disk.bin
 
         There can only be one output file per compile, if more than
         one output files are present, the last one will be used. If
@@ -97,7 +95,7 @@
 
                 -s              - Set starting point
 
-        Use: -s0, -s0x7c00
+        Use: -s 0, -s 0x7c00
 
         This is an optional command, if you don't use this option,
         the standard DOS .COM starting point (0x100) is used.
@@ -106,7 +104,7 @@
 
                 -b              - Set buffer size
 
-        Use: -b0x400, -b0x100
+        Use: -b 0x400, -b 0x100
 
         This option changes the size of the output buffer kept in
         memory. Should be a value between 0x100 (256) and 0x4000
@@ -116,27 +114,35 @@
 
                 -m              - Set output level
 
-        Use: -m0, -m1, -m2
+        Use: -m 0, -m 1, -m 2
 
         m0 means: "only report errors"
         m1 means: "only report errors and serious warnings"
         m2 means: "report all"
 
-
         =============================================================
 
                 -f              - Set destination format
 
-        Use: -fbin, -fcom, -ftexe, -fovl
+        Use: -f bin, -f com, -f texe, -f ovl
 
         fbin means:  raw binary
         fcom means:  DOS .com file
         ftexe means: DOS .exe file with tiny memory model
         fovl means: the same as texe but with symbol table at end
 
+        =============================================================
+
+                -d              - Predefine constant
+
+        Use: -dVSEG=0xA000, -dDOS=1
+
+        =============================================================
+
         All other commands, not beginning with '-' will be assumed
         to be input files.
 
+        =============================================================
 
 
                 The syntax of MSA
@@ -214,22 +220,6 @@ my_dd:  DD      0x23a36b14,0x552814,0x5ba4382,0x1000000,4,51,6
         ';', are the only valid comments in MSA2.
 
 
-        Space
-        =====
-
-        NASM will assemble this
-
-        mov     ax, 3
-        cmp     al, 2
-
-        , but MSA2 says 'Syntax error'. Spaces aren't allowed everywhere
-        in MSA2. Not within identifiers, or between operands (like in the
-        example above). Use this instead:
-
-        mov     ax,3
-        cmp     al,2
-
-
         Opcodes
         =======
 
@@ -241,6 +231,6 @@ my_dd:  DD      0x23a36b14,0x552814,0x5ba4382,0x1000000,4,51,6
         ...
 
 
-                23:55 14 Nov 2019
+                23:31 24 Nov 2019
                 -=-=-=-=-=-=-=-=-
                  End of document

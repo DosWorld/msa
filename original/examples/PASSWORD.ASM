@@ -39,8 +39,6 @@
 ;                       are recorded. If you type SECTER<BKSPACE>T, the key
 ;                       sequence to unlock is SECTER<BKSPACE>T, not SECRET.
 
-                ORG     0X0100
-
                 PUSH    DS
                 XOR     AX,AX
                 MOV     DS,AX

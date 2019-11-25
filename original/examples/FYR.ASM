@@ -21,8 +21,6 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 ;
-                ORG     0X0100
-
                 MOV     AX,0X13
                 INT     0X10
                 MOV     AX,0XA000
