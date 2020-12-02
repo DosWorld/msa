@@ -44,6 +44,11 @@ as texe, but with symbol table).
 
 Examples how to use overlays - see /original/examples/OVL-TP7/ folder.
 
+## Differences with MSA
+
+* Added missed opcodes
+* Added .exe generation
+
 ## Differences with NASM
 
 * No macros / includes
